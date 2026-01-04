@@ -43,6 +43,14 @@
                     },
                     animation: {
                         'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'glitch': 'glitch 1s linear infinite',
+                    },
+                    keyframes: {
+                        glitch: {
+                            '2%, 64%': { transform: 'translate(2px,0) skew(0deg)' },
+                            '4%, 60%': { transform: 'translate(-2px,0) skew(0deg)' },
+                            '62%': { transform: 'translate(0,0) skew(5deg)' },
+                        }
                     }
                 }
             }
@@ -160,6 +168,48 @@
             text-orientation: mixed;
         }
 
+        /* Glitch Effect Utility */
+        .glitch-text {
+            position: relative;
+        }
+        .glitch-text::before,
+        .glitch-text::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        .glitch-text::before {
+            left: 2px;
+            text-shadow: -1px 0 #ff00c1;
+            clip: rect(44px, 450px, 56px, 0);
+            animation: glitch-anim 5s infinite linear alternate-reverse;
+        }
+        .glitch-text::after {
+            left: -2px;
+            text-shadow: -1px 0 #00fff9;
+            clip: rect(44px, 450px, 56px, 0);
+            animation: glitch-anim2 5s infinite linear alternate-reverse;
+        }
+        @keyframes glitch-anim {
+            0% { clip: rect(30px, 9999px, 36px, 0); }
+            20% { clip: rect(87px, 9999px, 99px, 0); }
+            40% { clip: rect(10px, 9999px, 39px, 0); }
+            60% { clip: rect(65px, 9999px, 86px, 0); }
+            80% { clip: rect(2px, 9999px, 20px, 0); }
+            100% { clip: rect(54px, 9999px, 76px, 0); }
+        }
+        @keyframes glitch-anim2 {
+            0% { clip: rect(12px, 9999px, 86px, 0); }
+            20% { clip: rect(45px, 9999px, 12px, 0); }
+            40% { clip: rect(2px, 9999px, 32px, 0); }
+            60% { clip: rect(90px, 9999px, 66px, 0); }
+            80% { clip: rect(12px, 9999px, 2px, 0); }
+            100% { clip: rect(78px, 9999px, 92px, 0); }
+        }
+
         /* --- NEW FEATURE: DYNAMIC ADAPTIVE THEME OVERRIDES --- */
         
         /* Cursor Fix: Ensure transition override doesn't break transform animations */
@@ -259,9 +309,13 @@
 
         // --- NEW FEATURES INTEGRATION ---
 
-        const DecryptText = ({ text, className }) => {
-            const [displayText, setDisplayText] = useState('');
+        // UPDATED: Added trigger prop to control when decryption starts
+        const DecryptText = ({ text, className, trigger = true }) => {
+            const [displayText, setDisplayText] = useState(trigger ? '' : text.replace(/./g, ' ')); 
+            
             useEffect(() => {
+                if (!trigger) return;
+                
                 let iteration = 0;
                 const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890@#$%&";
                 const interval = setInterval(() => {
@@ -275,7 +329,7 @@
                     iteration += 1/3; 
                 }, 30);
                 return () => clearInterval(interval);
-            }, [text]);
+            }, [text, trigger]);
             return <span className={className}>{displayText}</span>;
         };
 
@@ -323,6 +377,71 @@
             }, []);
 
             return <canvas id="matrix-canvas" ref={canvasRef}></canvas>;
+        };
+
+        // --- NEW COMPONENT: FUTURISTIC SPLASH SCREEN ---
+        const SplashScreen = ({ onComplete }) => {
+            const [progress, setProgress] = useState(0);
+
+            useEffect(() => {
+                // Animate progress bar over 2.5 seconds
+                const duration = 2500;
+                const interval = 25; // update every 25ms
+                const steps = duration / interval;
+                let currentStep = 0;
+
+                const timer = setInterval(() => {
+                    currentStep++;
+                    const newProgress = Math.min(100, (currentStep / steps) * 100);
+                    setProgress(newProgress);
+
+                    if (currentStep >= steps) {
+                        clearInterval(timer);
+                        setTimeout(onComplete, 300); // Slight delay after 100% before unmounting
+                    }
+                }, interval);
+
+                return () => clearInterval(timer);
+            }, [onComplete]);
+
+            return (
+                <motion.div
+                    initial={{ opacity: 1 }}
+                    exit={{ opacity: 0, scale: 1.1, filter: "blur(10px)" }}
+                    transition={{ duration: 0.8 }}
+                    className="fixed inset-0 z-[99999] bg-black flex flex-col items-center justify-center overflow-hidden"
+                >
+                    <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
+                    
+                    {/* Futuristic Text with Glitch */}
+                    <div className="relative z-10 text-center">
+                        <h1 className="text-4xl md:text-6xl font-display font-bold text-white mb-2 glitch-text" data-text="AAKASH KHAMARI">
+                            AAKASH KHAMARI
+                        </h1>
+                        <p className="text-blue-500 font-mono text-sm tracking-[0.5em] animate-pulse">
+                            SYSTEM INITIALIZATION
+                        </p>
+                    </div>
+
+                    {/* Loader Bar */}
+                    <div className="mt-8 w-64 h-1 bg-gray-800 rounded-full overflow-hidden relative">
+                        <motion.div 
+                            className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-blue-500"
+                            style={{ width: `${progress}%` }}
+                        />
+                    </div>
+                    
+                    <div className="mt-2 font-mono text-xs text-gray-500">
+                        LOADING ASSETS... {Math.round(progress)}%
+                    </div>
+
+                    {/* Decorative Elements */}
+                    <div className="absolute bottom-10 left-10 font-mono text-xs text-gray-600">
+                        ID: AK-2026-X <br/>
+                        SECURE_CONN: TRUE
+                    </div>
+                </motion.div>
+            );
         };
 
         const TerminalModal = ({ onClose }) => {
@@ -801,14 +920,22 @@
             );
         };
 
-        const HeroSection = () => {
+        // UPDATED: Added startAnimation prop to control entrance sequence
+        const HeroSection = ({ startAnimation = false }) => {
             const resumeLink = "https://drive.google.com/file/d/1kmypPw8J2S6Wl9_C_Zcg0O9XijObZVFh/view?usp=sharing";
+
+            const variants = {
+                hidden: { opacity: 0, y: 20 },
+                visible: { opacity: 1, y: 0, transition: { duration: 0.8 } }
+            };
 
             return (
                 <section id="home" className="min-h-screen flex items-center pl-4 md:pl-28 pr-4 relative overflow-hidden">
                     <div className="max-w-5xl w-full z-10">
                         <motion.div 
-                            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}
+                            initial="hidden"
+                            animate={startAnimation ? "visible" : "hidden"}
+                            variants={variants}
                             className="flex items-center gap-3 mb-6"
                         >
                             <span className="px-3 py-1 rounded-full border border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-400 text-xs font-mono font-bold tracking-widest flex items-center gap-2 shadow-[0_0_15px_rgba(59,130,246,0.3)]">
@@ -817,18 +944,35 @@
                             </span>
                         </motion.div>
 
+                        {/* --- NEW ADDITION: VISIBLE IDENTITY --- */}
+                        <motion.h2
+                            initial="hidden"
+                            animate={startAnimation ? "visible" : "hidden"}
+                            variants={variants}
+                            transition={{ duration: 0.5, delay: 0.1 }}
+                            className="text-lg md:text-xl font-mono text-blue-500 dark:text-blue-400 font-bold tracking-[0.2em] mb-4 uppercase"
+                        >
+                            // Aakash Khamari
+                        </motion.h2>
+
                         <motion.h1 
-                            initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.2 }}
+                            initial="hidden"
+                            animate={startAnimation ? "visible" : "hidden"}
+                            variants={variants}
+                            transition={{ duration: 0.8, delay: 0.2 }}
                             className="text-5xl sm:text-7xl md:text-9xl font-display font-bold dark:text-white text-slate-900 leading-[0.9] tracking-tighter mb-8"
                         >
                             ENGINEERING <br />
                             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-700 via-purple-700 to-slate-900 dark:from-blue-500 dark:via-purple-500 dark:to-white text-glow">
-                                <DecryptText text="DIGITAL FUTURE" />
+                                <DecryptText text="DIGITAL FUTURE" trigger={startAnimation} />
                             </span>
                         </motion.h1>
 
                         <motion.p 
-                            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8, delay: 0.4 }}
+                            initial="hidden"
+                            animate={startAnimation ? "visible" : "hidden"}
+                            variants={variants}
+                            transition={{ duration: 0.8, delay: 0.4 }}
                             className="max-w-xl dark:text-gray-400 text-slate-600 text-sm md:text-lg font-mono leading-relaxed border-l-2 border-blue-500/50 pl-6 mb-10"
                         >
                             Full-stack engineer architecting high-performance FinTech infrastructure and scalable systems.
@@ -837,7 +981,10 @@
                         </motion.p>
 
                         <motion.div 
-                            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8, delay: 0.6 }}
+                            initial="hidden"
+                            animate={startAnimation ? "visible" : "hidden"}
+                            variants={variants}
+                            transition={{ duration: 0.8, delay: 0.6 }}
                             className="flex flex-wrap gap-4"
                         >
                             <a href="#projects" className="w-full sm:w-auto">
@@ -887,7 +1034,10 @@
                                 </span>
                                 {link && <a href={link} target="_blank" className="text-slate-400 dark:text-gray-500 group-hover:text-slate-800 dark:group-hover:text-white transition-colors"><ExternalLink size={16} /></a>}
                             </div>
-                            <h3 className={`text-2xl md:text-3xl font-display font-bold mb-3 transition-colors ${isFeatured ? 'text-slate-900 dark:text-white group-hover:text-yellow-700 dark:group-hover:text-yellow-200' : 'text-slate-900 dark:text-white group-hover:text-blue-700 dark:group-hover:text-blue-200'}`}>{title}</h3>
+                            {/* Make Title Clickable if link exists */}
+                            <a href={link || "#"} target="_blank" className="block">
+                                <h3 className={`text-2xl md:text-3xl font-display font-bold mb-3 transition-colors ${isFeatured ? 'text-slate-900 dark:text-white group-hover:text-yellow-700 dark:group-hover:text-yellow-200' : 'text-slate-900 dark:text-white group-hover:text-blue-700 dark:group-hover:text-blue-200'}`}>{title}</h3>
+                            </a>
                             <p className="text-slate-600 dark:text-gray-400 text-sm leading-relaxed mb-6 font-medium">
                                 {description}
                             </p>
@@ -926,7 +1076,7 @@
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                             {/* FEATURED: Settle X */}
+                             {/* MODIFIED: Added specific project links */}
                             <ProjectCard 
                                 title="SETTLE X"
                                 category="Fintech / RegTech"
@@ -934,9 +1084,9 @@
                                 stack={['Python', 'React', 'PostgreSQL', 'Docker', 'AI']}
                                 isLarge={true}
                                 isFeatured={true}
-                                link="#"
+                                link="https://aakash-khamari.github.io/SettleX/"
                             />
-                            {/* FEATURED: Bazaar Odisha */}
+                            
                             <ProjectCard 
                                 title="BAZAAR ODISHA"
                                 category="Govt Innovation / E-Com"
@@ -957,7 +1107,7 @@
                                 category="Geo-Security"
                                 description="Advanced location-based attendance system using Google Maps API. 95% geofence accuracy with anti-spoofing logic."
                                 stack={['Kotlin', 'Google Maps API', 'Firebase']}
-                                link="https://github.com/Aakash-Khamari"
+                                link="https://github.com/Aakash-Khamari/Nexus"
                             />
                             <ProjectCard 
                                 title="PORTFOLIO V1"
@@ -1366,22 +1516,214 @@
             }, [intensity]);
         };
 
+        // --- NEW COMPONENT: SOLAR SYSTEM FLY-THROUGH INTRO ---
+        // UPDATED: Added braking logic for seamless transition
+        const SolarSystemIntro = ({ onComplete }) => {
+            const canvasRef = useRef(null);
+            const [opacity, setOpacity] = useState(1);
+
+            useEffect(() => {
+                const canvas = canvasRef.current;
+                const ctx = canvas.getContext('2d');
+                let width = window.innerWidth;
+                let height = window.innerHeight;
+                canvas.width = width;
+                canvas.height = height;
+
+                let startTime = Date.now();
+                const duration = 4000; // 4 seconds total duration
+                const brakeStart = 3000; // Start slowing down at 3 seconds
+                let frameId;
+
+                // Setup Stars (High count for Warp Effect)
+                const stars = Array(400).fill().map(() => ({
+                    x: (Math.random() - 0.5) * width * 10,
+                    y: (Math.random() - 0.5) * height * 10,
+                    z: Math.random() * 10000 + 100 
+                }));
+
+                // Setup Planets (Z-distance from camera at start)
+                // Camera moves from 0 to negative Z relative to objects
+                const planets = [
+                    { name: "Sun", z: 2000, size: 400, color: "#fbbf24", type: 'star', x: 0, y: 0 },
+                    { name: "Mercury", z: 3500, size: 20, color: "#a1a1aa", x: 300, y: -100 },
+                    { name: "Venus", z: 5000, size: 45, color: "#fcd34d", x: -400, y: 200 },
+                    { name: "Earth", z: 7000, size: 50, color: "#3b82f6", x: 500, y: -250 },
+                    { name: "Mars", z: 8500, size: 35, color: "#ef4444", x: -300, y: 150 },
+                    // Asteroid Belt simulated by particles in range 10000-12000
+                    { name: "Jupiter", z: 14000, size: 180, color: "#d97706", x: 800, y: -400 },
+                    { name: "Saturn", z: 18000, size: 150, color: "#fde68a", x: -900, y: 300, ring: true },
+                    { name: "Uranus", z: 22000, size: 100, color: "#22d3ee", x: 600, y: 500 },
+                    { name: "Neptune", z: 26000, size: 95, color: "#3b82f6", x: -700, y: -300 },
+                ];
+                
+                // Asteroids (Cluster around Z=10000)
+                const asteroids = Array(150).fill().map(() => ({
+                     x: (Math.random() - 0.5) * 5000,
+                     y: (Math.random() - 0.5) * 5000,
+                     z: 10000 + Math.random() * 3000,
+                     size: Math.random() * 5
+                }));
+
+                const animate = () => {
+                    const now = Date.now();
+                    const elapsed = now - startTime;
+                    
+                    // SEAMLESS MERGE LOGIC: Acceleration then Braking
+                    let speed;
+                    if (elapsed < brakeStart) {
+                        // Phase 1: Accelerate
+                        speed = 75 + (elapsed * 0.05); 
+                    } else {
+                        // Phase 2: Decelerate rapidly to 0
+                        const peakSpeed = 75 + (brakeStart * 0.05);
+                        const brakeProgress = (elapsed - brakeStart) / (duration - brakeStart);
+                        speed = peakSpeed * (1 - brakeProgress);
+                        if (speed < 0) speed = 0;
+                    }
+
+                    // Clear Canvas
+                    ctx.fillStyle = '#050505'; 
+                    ctx.fillRect(0, 0, width, height);
+
+                    const cx = width / 2;
+                    const cy = height / 2;
+
+                    // Stars (Hyperspace streaks)
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 1.5; 
+                    stars.forEach(star => {
+                        const oldZ = star.z;
+                        star.z -= speed * 2; // Stars move faster for warp effect
+                        if (star.z <= 0) {
+                            star.z = 10000;
+                            star.x = (Math.random() - 0.5) * width * 10;
+                            star.y = (Math.random() - 0.5) * height * 10;
+                        }
+                        
+                        // Project 3D to 2D
+                        const k = 500 / star.z;
+                        const x = cx + star.x * k;
+                        const y = cy + star.y * k;
+                        
+                        const oldK = 500 / oldZ;
+                        const oldX = cx + star.x * oldK;
+                        const oldY = cy + star.y * oldK;
+
+                        // Draw Trail
+                        if (x >= 0 && x <= width && y >= 0 && y <= height) {
+                             const alpha = 1 - (star.z / 10000);
+                             ctx.globalAlpha = alpha * 0.4;
+                             ctx.beginPath();
+                             ctx.moveTo(oldX, oldY);
+                             ctx.lineTo(x, y);
+                             ctx.stroke();
+                        }
+                    });
+
+                    // Planets & Asteroids (Sorted by Z for correct occlusion)
+                    const allObjects = [...planets, ...asteroids].sort((a, b) => b.z - a.z); 
+
+                    allObjects.forEach(obj => {
+                        obj.z -= speed;
+                        
+                        if (obj.z > 10 && obj.z < 25000) {
+                            const scale = 500 / obj.z;
+                            const x = cx + obj.x * scale;
+                            const y = cy + obj.y * scale;
+                            const size = (obj.size || 2) * scale;
+                            
+                            if (obj.name) { // It's a planet/sun
+                                // Glow Effect
+                                const g = ctx.createRadialGradient(x, y, size * 0.1, x, y, size * 2);
+                                g.addColorStop(0, obj.color);
+                                g.addColorStop(0.5, obj.color + '80'); // semi-transparent
+                                g.addColorStop(1, 'transparent');
+                                
+                                ctx.globalAlpha = Math.min(1, scale * 3); 
+                                ctx.fillStyle = g;
+                                ctx.beginPath();
+                                ctx.arc(x, y, size * 2, 0, Math.PI * 2);
+                                ctx.fill();
+                                
+                                // Solid Body
+                                ctx.fillStyle = obj.color;
+                                ctx.beginPath();
+                                ctx.arc(x, y, size, 0, Math.PI * 2);
+                                ctx.fill();
+
+                                // Saturn's Ring
+                                if (obj.ring) {
+                                    ctx.strokeStyle = '#dac495';
+                                    ctx.lineWidth = size * 0.4;
+                                    ctx.beginPath();
+                                    ctx.ellipse(x, y, size * 2.5, size * 0.6, 0.2, 0, Math.PI * 2);
+                                    ctx.stroke();
+                                }
+                            } else { // Asteroid
+                                 ctx.fillStyle = '#888';
+                                 ctx.globalAlpha = Math.min(1, scale * 2);
+                                 ctx.beginPath();
+                                 ctx.arc(x, y, size, 0, Math.PI * 2);
+                                 ctx.fill();
+                            }
+                        }
+                    });
+
+                    // END CONDITION UPDATE:
+                    // Only start fading opacity when the motion has nearly stopped (time > duration)
+                    if (elapsed < duration + 1000) {
+                        if (elapsed >= duration) {
+                            setOpacity(0); // Trigger CSS fade out
+                        }
+                        frameId = requestAnimationFrame(animate);
+                    } else {
+                         // Final safety completion
+                         setTimeout(onComplete, 100); 
+                    }
+                };
+
+                frameId = requestAnimationFrame(animate);
+                
+                const handleResize = () => {
+                    width = canvas.width = window.innerWidth;
+                    height = canvas.height = window.innerHeight;
+                };
+                window.addEventListener('resize', handleResize);
+
+                return () => {
+                    cancelAnimationFrame(frameId);
+                    window.removeEventListener('resize', handleResize);
+                };
+            }, [onComplete]);
+
+            return (
+                <canvas 
+                    ref={canvasRef} 
+                    style={{ 
+                        opacity, 
+                        transition: 'opacity 1s ease-out', // Smooth dissolve
+                        position: 'fixed',
+                        inset: 0,
+                        zIndex: 9000, 
+                        pointerEvents: 'none',
+                        background: '#050505'
+                    }} 
+                />
+            );
+        };
+
         const App = () => {
+            const [bootPhase, setBootPhase] = useState('splash');
             const [activeSection, setActiveSection] = useState('home');
-            // 'theme' state is kept for backward compatibility with existing components that rely on it (like WarpBackground)
-            // But visually, the intensity slider overrides it via CSS variables.
             const [theme, setTheme] = useState('dark');
             const [showTerminal, setShowTerminal] = useState(false);
-            
-            // --- NEW STATE ---
             const [sliderVisible, setSliderVisible] = useState(false);
-            const [intensity, setIntensity] = useState(0); // 0 = Dark, 100 = Light
+            const [intensity, setIntensity] = useState(0); 
 
-            // Initialize theme from system preference
             useEffect(() => {
                 const systemPref = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
                 setTheme(systemPref);
-                // Initialize intensity based on theme
                 setIntensity(systemPref === 'dark' ? 0 : 100);
 
                 if (systemPref === 'dark') {
@@ -1392,10 +1734,8 @@
                 }
             }, []);
 
-            // Activate the theme engine
             useThemeEngine(intensity);
 
-            // Sync binary theme state with intensity for backward compatibility
             useEffect(() => {
                 if (intensity > 60 && theme === 'dark') {
                     setTheme('light');
@@ -1429,43 +1769,65 @@
                 return () => window.removeEventListener('scroll', handleScroll);
             }, []);
 
+            const showMainContent = bootPhase !== 'splash';
+
             return (
                 <main className={`relative min-h-screen selection:bg-blue-500/30 transition-colors duration-500 ${theme === 'dark' ? 'bg-obsidian text-white' : 'bg-paper text-slate-900 light-bg-grid'}`}>
-                    <WarpBackground theme={theme} />
-                    <AdvancedCursor />
-                    <MatrixRain />
                     
-                    <NavDock 
-                        activeSection={activeSection} 
-                        theme={theme} 
-                        onOpenTerminal={() => setShowTerminal(true)}
-                    />
-                    
-                    {/* MODIFIED: Passed new props to ThemeSwitch and added Controller */}
-                    <ThemeSwitch 
-                        theme={theme} 
-                        toggleSlider={toggleSlider} 
-                        sliderVisible={sliderVisible}
-                    />
-                    <ThemeIntensityController 
-                        intensity={intensity} 
-                        setIntensity={setIntensity} 
-                        isVisible={sliderVisible} 
-                    />
-                    
-                    <StatusHUD />
-                    <FloatingArcadeTrigger theme={theme} />
-                    
+                    {/* --- PHASE 1: SPLASH SCREEN --- */}
                     <AnimatePresence>
-                        {showTerminal && <TerminalModal onClose={() => setShowTerminal(false)} />}
+                        {bootPhase === 'splash' && (
+                            <SplashScreen onComplete={() => setBootPhase('intro')} />
+                        )}
                     </AnimatePresence>
 
-                    <div className="relative z-10">
-                        <HeroSection />
-                        <ProjectsSection />
-                        <StackSection />
-                        <ContactSection />
-                    </div>
+                    {/* --- PHASE 2: SOLAR SYSTEM INTRO --- */}
+                    <AnimatePresence>
+                        {bootPhase === 'intro' && (
+                            <SolarSystemIntro onComplete={() => setBootPhase('main')} />
+                        )}
+                    </AnimatePresence>
+
+                    {/* --- PHASE 3: MAIN CONTENT (Revealed behind Intro) --- */}
+                    {showMainContent && (
+                        <>
+                            <WarpBackground theme={theme} />
+                            <AdvancedCursor />
+                            <MatrixRain />
+                            
+                            <NavDock 
+                                activeSection={activeSection} 
+                                theme={theme} 
+                                onOpenTerminal={() => setShowTerminal(true)}
+                            />
+                            
+                            <ThemeSwitch 
+                                theme={theme} 
+                                toggleSlider={toggleSlider} 
+                                sliderVisible={sliderVisible}
+                            />
+                            <ThemeIntensityController 
+                                intensity={intensity} 
+                                setIntensity={setIntensity} 
+                                isVisible={sliderVisible} 
+                            />
+                            
+                            <StatusHUD />
+                            <FloatingArcadeTrigger theme={theme} />
+                            
+                            <AnimatePresence>
+                                {showTerminal && <TerminalModal onClose={() => setShowTerminal(false)} />}
+                            </AnimatePresence>
+
+                            <div className="relative z-10">
+                                {/* UPDATED: Pass bootPhase to trigger animations only when landed */}
+                                <HeroSection startAnimation={bootPhase === 'main'} />
+                                <ProjectsSection />
+                                <StackSection />
+                                <ContactSection />
+                            </div>
+                        </>
+                    )}
                 </main>
             );
         };
