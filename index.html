@@ -3,53 +3,144 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aakash Khamari | Full Stack Developer</title>
+    <title>Aakash Khamari | Full Stack Engineer</title>
     
+    <!-- Core Libraries -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Animation Library -->
     <script src="https://unpkg.com/framer-motion@10.16.4/dist/framer-motion.js"></script>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;800&family=JetBrains+Mono:wght@400;500;700&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
 
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                        display: ['Rajdhani', 'sans-serif'],
+                    },
+                    colors: {
+                        obsidian: '#050505',
+                        paper: '#f0f4f8', 
+                        glass: 'rgba(255, 255, 255, 0.03)',
+                        glassLight: 'rgba(255, 255, 255, 0.75)', 
+                        glassBorder: 'rgba(255, 255, 255, 0.08)',
+                        glassBorderLight: 'rgba(0, 0, 0, 0.06)',
+                        neonBlue: '#3b82f6',
+                        neonPurple: '#8b5cf6',
+                        neonGold: '#fbbf24',
+                        slate: {
+                            850: '#1e293b', 
+                        }
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                }
+            }
+        }
+    </script>
 
     <style>
-        :root {
-            --neon-cyan: #22d3ee;
-            --neon-purple: #a855f7;
-            --bg-dark: #030712;
-        }
         body {
-            background-color: var(--bg-dark);
-            color: #e2e8f0;
-            font-family: 'Space Grotesk', sans-serif;
             overflow-x: hidden;
-            cursor: none;
-        }
-        .mono { font-family: 'JetBrains Mono', monospace; }
-        
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: #030712; }
-        ::-webkit-scrollbar-thumb { background: #334155; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--neon-cyan); }
-
-        .noise-bg {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none;
-            z-index: 1; 
-            opacity: 0.03;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            cursor: none; 
+            transition: background-color 0.5s ease;
         }
         
-        #canvas-bg {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            z-index: 0;
-            pointer-events: none;
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+        
+        .light-mode ::-webkit-scrollbar-thumb { background: #94a3b8; }
+        .light-mode ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+
+        /* Utilities */
+        .glass-panel {
+            background: rgba(10, 10, 10, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.3s ease;
+        }
+        
+        .light-mode .glass-panel {
+            background: rgba(255, 255, 255, 0.85); 
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 
+                0 4px 6px -1px rgba(0, 0, 0, 0.05), 
+                0 10px 15px -3px rgba(0, 0, 0, 0.02),
+                inset 0 0 20px rgba(255, 255, 255, 0.5); 
+        }
+        
+        .glass-panel-gold {
+             background: rgba(20, 15, 5, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(251, 191, 36, 0.2);
+        }
+        
+        .light-mode .glass-panel-gold {
+            background: rgba(255, 251, 235, 0.9); 
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            box-shadow: 0 10px 25px -5px rgba(245, 158, 11, 0.15);
         }
 
+        .text-glow {
+            text-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+        }
+        .light-mode .text-glow {
+            text-shadow: none; 
+        }
+        
+        .text-glow-gold {
+            text-shadow: 0 0 20px rgba(251, 191, 36, 0.5);
+        }
+        .light-mode .text-glow-gold {
+            text-shadow: none;
+        }
+
+        .scanline {
+            width: 100%;
+            height: 100px;
+            z-index: 10;
+            background: linear-gradient(0deg, rgba(0,0,0,0) 0%, rgba(255, 255, 255, 0.02) 50%, rgba(0,0,0,0) 100%);
+            opacity: 0.1;
+            position: absolute;
+            bottom: 100%;
+            animation: scanline 10s linear infinite;
+            pointer-events: none;
+        }
+        
+        .light-mode .scanline {
+            background: linear-gradient(0deg, rgba(0,0,0,0) 0%, rgba(0, 0, 0, 0.03) 50%, rgba(0,0,0,0) 100%);
+        }
+
+        @keyframes scanline {
+            0% { bottom: 100%; }
+            100% { bottom: -100px; }
+        }
+
+        .light-bg-grid {
+            background-size: 40px 40px;
+            background-image: 
+                linear-gradient(to right, rgba(0, 0, 0, 0.03) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+        }
+
+        /* Matrix Canvas */
         #matrix-canvas {
             position: fixed;
             top: 0; left: 0;
@@ -62,24 +153,75 @@
         .matrix-active #matrix-canvas {
             opacity: 1;
         }
+        
+        /* Writing Mode Utility */
+        .writing-vertical {
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+        }
 
-        .cursor-dot, .cursor-outline {
-            position: fixed;
-            top: 0; left: 0;
-            transform: translate(-50%, -50%);
-            border-radius: 50%;
-            z-index: 9999;
-            pointer-events: none;
+        /* --- NEW FEATURE: DYNAMIC ADAPTIVE THEME OVERRIDES --- */
+        
+        /* Cursor Fix: Ensure transition override doesn't break transform animations */
+        body.dynamic-active {
+            background-color: var(--bg-primary) !important;
+            color: var(--text-primary) !important;
         }
-        .cursor-dot { width: 8px; height: 8px; background-color: var(--neon-cyan); }
-        .cursor-outline {
-            width: 40px; height: 40px;
-            border: 1px solid var(--neon-cyan);
-            transition: width 0.2s, height 0.2s, background-color 0.2s;
+        
+        /* Only override transitions for color properties to allow Cursor to move smoothly */
+        body.dynamic-active * {
+            transition: background-color 0s, border-color 0s, color 0s, box-shadow 0s !important;
         }
-        @media (hover: none) and (pointer: coarse) {
-            .cursor-dot, .cursor-outline { display: none; }
-            body { cursor: auto; }
+
+        /* Background Overrides */
+        body.dynamic-active .bg-obsidian,
+        body.dynamic-active .bg-paper,
+        body.dynamic-active .bg-slate-900,
+        body.dynamic-active .bg-white {
+            background-color: var(--bg-primary) !important;
+        }
+
+        body.dynamic-active .bg-slate-950 {
+            background-color: var(--bg-secondary) !important;
+        }
+
+        /* Text Overrides */
+        body.dynamic-active .text-white,
+        body.dynamic-active .text-slate-900 {
+            color: var(--text-primary) !important;
+        }
+
+        body.dynamic-active .text-slate-600,
+        body.dynamic-active .text-slate-500,
+        body.dynamic-active .text-gray-400,
+        body.dynamic-active .text-gray-500 {
+            color: var(--text-secondary) !important;
+        }
+
+        /* Glass Panel Overrides */
+        body.dynamic-active .glass-panel {
+            background: var(--glass-bg) !important;
+            border-color: var(--glass-border) !important;
+            box-shadow: var(--glass-shadow) !important;
+            backdrop-filter: blur(var(--glass-blur)) !important;
+        }
+
+        /* Button Overrides */
+        body.dynamic-active button.bg-slate-900 {
+             background-color: var(--btn-bg) !important;
+             color: var(--btn-text) !important;
+        }
+
+        /* Badge Override (Fixes AK Badge Color) */
+        body.dynamic-active .ak-badge {
+            background-color: var(--badge-bg) !important;
+            color: var(--badge-text) !important;
+            box-shadow: var(--badge-shadow) !important;
+        }
+        
+        /* Scanline Override for middle tones */
+        body.dynamic-active .scanline {
+            opacity: var(--scanline-opacity) !important;
         }
     </style>
 </head>
@@ -87,55 +229,35 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useRef } = React;
-        const { motion, useScroll, useTransform, useSpring, useMotionValue, useMotionTemplate, AnimatePresence } = window.Motion;
+        const { useState, useEffect, useRef, useMemo, useCallback } = React;
+        const { motion, useScroll, useTransform, useSpring, AnimatePresence, useDragControls } = window.Motion;
 
-        // --- ICONS ---
         const Icons = {
-            Github: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/><path d="M9 18c-4.51 2-5-2-7-2"/></svg>,
-            External: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>,
-            Terminal: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>,
-            Arrow: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg>,
-            FileText: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>,
-            Menu: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>,
-            Close: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>,
-            Command: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><line x1="12" y1="4" x2="12" y2="20"></line><line x1="4" y1="12" x2="20" y2="12"></line></svg>,
-            Trophy: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 21h8m-4-9v9m0-15a5 5 0 0 0-5 5v3a5 5 0 0 0 5 5h0a5 5 0 0 0 5-5V7a5 5 0 0 0-5-5z"></path></svg>
+            Layout: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><line x1="3" x2="21" y1="9" y2="9"/><line x1="9" x2="9" y1="21" y2="9"/></svg>,
+            Layers: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/></svg>,
+            Cpu: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><rect width="16" height="16" x="4" y="4" rx="2"/><rect width="6" height="6" x="9" y="9" rx="1"/><path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 15h2"/><path d="M20 9h2"/><path d="M9 2v2"/><path d="M9 20v2"/></svg>,
+            Mail: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>,
+            Terminal: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><polyline points="4 17 10 11 4 5"/><line x1="12" x2="20" y1="19" y2="19"/></svg>,
+            Github: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/><path d="M9 18c-4.51 2-5-2-7-2"/></svg>,
+            ExternalLink: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" x2="21" y1="14" y2="3"/></svg>,
+            Clock: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
+            MapPin: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>,
+            Activity: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>,
+            Award: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>,
+            GraduationCap: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>,
+            Check: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><polyline points="20 6 9 17 4 12"/></svg>,
+            Wifi: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>,
+            Zap: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>,
+            Sun: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="12" cy="12" r="4" fill="currentColor" stroke="none"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>,
+            Moon: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" fill="currentColor" stroke="none"/></svg>,
+            Gamepad2: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><line x1="6" x2="10" y1="12" y2="12"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="15" x2="15.01" y1="13" y2="13"/><line x1="18" x2="18.01" y1="11" y2="11"/><rect width="20" height="12" x="2" y="6" rx="2"/></svg>,
+            FileText: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>,
+            Close: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         };
 
-        // --- MICRO COMPONENTS ---
+        const { Layout, Layers, Cpu, Mail, Terminal, Github, ExternalLink, Clock, MapPin, Activity, Award, GraduationCap, Check, Wifi, Zap, Sun, Moon, Gamepad2, FileText, Close } = Icons;
 
-        const CustomCursor = () => {
-            const cursorDot = useRef(null);
-            const cursorOutline = useRef(null);
-
-            useEffect(() => {
-                const moveCursor = (e) => {
-                    const posX = e.clientX;
-                    const posY = e.clientY;
-
-                    if (cursorDot.current) {
-                        cursorDot.current.style.left = `${posX}px`;
-                        cursorDot.current.style.top = `${posY}px`;
-                    }
-                    if (cursorOutline.current) {
-                        cursorOutline.current.animate({
-                            left: `${posX}px`,
-                            top: `${posY}px`
-                        }, { duration: 500, fill: "forwards" });
-                    }
-                };
-                window.addEventListener("mousemove", moveCursor);
-                return () => window.removeEventListener("mousemove", moveCursor);
-            }, []);
-
-            return (
-                <>
-                    <div ref={cursorDot} className="cursor-dot"></div>
-                    <div ref={cursorOutline} className="cursor-outline"></div>
-                </>
-            );
-        };
+        // --- NEW FEATURES INTEGRATION ---
 
         const DecryptText = ({ text, className }) => {
             const [displayText, setDisplayText] = useState('');
@@ -150,218 +272,13 @@
                         }).join("")
                     );
                     if(iteration >= text.length) clearInterval(interval);
-                    iteration += 1/2; 
+                    iteration += 1/3; 
                 }, 30);
                 return () => clearInterval(interval);
             }, [text]);
             return <span className={className}>{displayText}</span>;
         };
 
-        const TiltCard = ({ children, className = "" }) => {
-            const x = useMotionValue(0);
-            const y = useMotionValue(0);
-            const mouseX = useSpring(x, { stiffness: 500, damping: 100 });
-            const mouseY = useSpring(y, { stiffness: 500, damping: 100 });
-
-            function handleMouseMove({ currentTarget, clientX, clientY }) {
-                const { left, top, width, height } = currentTarget.getBoundingClientRect();
-                x.set((clientX - left) / width - 0.5);
-                y.set((clientY - top) / height - 0.5);
-            }
-
-            function handleMouseLeave() {
-                x.set(0); y.set(0);
-            }
-
-            const rotateX = useTransform(mouseY, [-0.5, 0.5], ["7deg", "-7deg"]);
-            const rotateY = useTransform(mouseX, [-0.5, 0.5], ["-7deg", "7deg"]);
-            const spotlightBg = useMotionTemplate`radial-gradient(650px circle at ${mouseX}px ${mouseY}px, rgba(34, 211, 238, 0.1), transparent 80%)`;
-
-            return (
-                <motion.div 
-                    onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave}
-                    style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
-                    className={`relative transform-gpu transition-all duration-200 ease-out ${className}`}
-                >
-                    <div className="absolute inset-0 bg-slate-900/40 rounded-xl border border-white/5 backdrop-blur-sm shadow-2xl"></div>
-                    <motion.div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition duration-500" style={{ background: spotlightBg }} />
-                    <div className="relative h-full transform-gpu" style={{ transform: "translateZ(20px)" }}>{children}</div>
-                </motion.div>
-            );
-        };
-
-        // --- NEW FEATURE: LEVEL UP SYSTEM ---
-        const LevelBadge = () => {
-            const { scrollYProgress } = useScroll();
-            const [levelData, setLevelData] = useState({ level: 1, title: 'VISITOR' });
-            const [showLevelUp, setShowLevelUp] = useState(false);
-
-            useEffect(() => {
-                return scrollYProgress.onChange((latest) => {
-                    let newLevel = 1;
-                    let newTitle = 'VISITOR';
-
-                    if (latest > 0.1) { newLevel = 10; newTitle = 'INITIATE'; }
-                    if (latest > 0.4) { newLevel = 35; newTitle = 'OPERATOR'; }
-                    if (latest > 0.7) { newLevel = 75; newTitle = 'ENGINEER'; }
-                    if (latest > 0.95) { newLevel = 100; newTitle = 'ARCHITECT'; }
-
-                    if (newTitle !== levelData.title) {
-                        setShowLevelUp(true);
-                        setTimeout(() => setShowLevelUp(false), 2000);
-                        setLevelData({ level: newLevel, title: newTitle });
-                    }
-                });
-            }, [scrollYProgress, levelData]);
-
-            return (
-                <div className="fixed bottom-6 right-6 z-[200] flex flex-col items-end gap-2 font-mono pointer-events-none">
-                    <AnimatePresence>
-                        {showLevelUp && (
-                            <motion.div
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -20 }}
-                                className="text-cyan-400 text-xs font-bold tracking-widest bg-cyan-950/80 px-3 py-1 rounded border border-cyan-500/30"
-                            >
-                                LEVEL UP DETECTED
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
-                    
-                    <div className="bg-slate-900/80 backdrop-blur border border-white/10 p-3 rounded-lg shadow-xl flex items-center gap-3">
-                        <div className="relative w-10 h-10 flex items-center justify-center bg-slate-800 rounded-md border border-slate-700">
-                             <span className="text-yellow-400"><Icons.Trophy /></span>
-                        </div>
-                        <div className="flex flex-col">
-                            <span className="text-[10px] text-slate-500 uppercase tracking-wider">Current Rank</span>
-                            <span className="text-sm font-bold text-white tracking-wide min-w-[80px]">{levelData.title}</span>
-                        </div>
-                        <div className="h-8 w-[1px] bg-white/10 mx-1"></div>
-                        <div className="flex flex-col items-end justify-center">
-                            <span className="text-[10px] text-cyan-400">LVL {Math.floor(levelData.level / 10)}</span>
-                            <div className="w-12 h-1 bg-slate-800 rounded-full mt-1 overflow-hidden">
-                                <motion.div 
-                                    className="h-full bg-cyan-500" 
-                                    style={{ width: `${levelData.level}%` }}
-                                    transition={{ type: "spring" }}
-                                />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            );
-        };
-
-        // --- INTERACTIVE TERMINAL (UPDATED) ---
-        const Terminal = ({ onClose }) => {
-            const [input, setInput] = useState("");
-            const [history, setHistory] = useState([
-                { type: 'system', content: 'Welcome to AK.OS v2.0. Type "help" for commands.' }
-            ]);
-            const scrollRef = useRef(null);
-
-            useEffect(() => {
-                if(scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-            }, [history]);
-
-            const handleCommand = (e) => {
-                if (e.key === 'Enter') {
-                    const cmd = input.trim().toLowerCase();
-                    let response = { type: 'text', content: '' };
-
-                    switch (cmd) {
-                        case 'help':
-                            response.content = "Available commands: help, about, projects, contact, clear, matrix, reset, exit";
-                            break;
-                        case 'about':
-                            response.content = "Full Stack Dev specializing in RegTech & FinTech. NUS-AIDF Fellow.";
-                            break;
-                        case 'projects':
-                            response.content = "Loaded modules: Settle X, Bazaar Odisha, Nexus Attendance.";
-                            break;
-                        case 'contact':
-                            window.open("https://mail.google.com/mail/?view=cm&fs=1&to=aakashkhamarilv@gmail.com", "_blank");
-                            response.content = "Opening secure communication channel...";
-                            break;
-                        case 'clear':
-                            setHistory([]);
-                            setInput("");
-                            return;
-                        case 'matrix':
-                            const isActive = document.body.classList.toggle('matrix-active');
-                            response.content = isActive 
-                                ? "Wake up, Neo... (Type 'matrix' again to disable)" 
-                                : "Matrix Mode Deactivated.";
-                            break;
-                        case 'reset':
-                            document.body.classList.remove('matrix-active');
-                            response.content = "System visuals reset.";
-                            break;
-                        case 'exit':
-                            onClose();
-                            return;
-                        default:
-                            response.content = `Command not found: ${cmd}. Try "help".`;
-                            response.type = 'error';
-                    }
-
-                    setHistory([...history, { type: 'user', content: cmd }, response]);
-                    setInput("");
-                }
-            };
-
-            return (
-                <motion.div 
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.9 }}
-                    className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-                >
-                    <div className="w-full max-w-2xl bg-slate-950 border border-slate-700 rounded-lg shadow-2xl overflow-hidden font-mono text-sm relative flex flex-col">
-                        {/* Header */}
-                        <div className="bg-slate-900 p-2 border-b border-slate-700 flex justify-between items-center">
-                            <div className="flex gap-2">
-                                <div className="w-3 h-3 rounded-full bg-red-500 cursor-pointer hover:bg-red-400" onClick={onClose} title="Close Terminal"></div>
-                                <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                                <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                            </div>
-                            <div className="text-slate-400 text-xs">user@ak-dev:~</div>
-                        </div>
-                        
-                        {/* Body */}
-                        <div ref={scrollRef} className="h-80 overflow-y-auto p-4 space-y-2 text-slate-300">
-                            {history.map((line, i) => (
-                                <div key={i} className={`${line.type === 'user' ? 'text-cyan-400' : line.type === 'error' ? 'text-red-400' : 'text-slate-300'}`}>
-                                    {line.type === 'user' ? '> ' : ''}{line.content}
-                                </div>
-                            ))}
-                            <div className="flex items-center text-cyan-400">
-                                <span className="mr-2">{'>'}</span>
-                                <input 
-                                    type="text" 
-                                    value={input}
-                                    onChange={(e) => setInput(e.target.value)}
-                                    onKeyDown={handleCommand}
-                                    className="bg-transparent border-none outline-none flex-1 text-slate-100"
-                                    autoFocus
-                                    placeholder="Type 'help'..."
-                                />
-                            </div>
-                        </div>
-
-                         {/* Footer - Close Button for Clarity */}
-                         <div className="p-2 border-t border-slate-800 bg-slate-900/50 flex justify-end">
-                            <button onClick={onClose} className="text-xs text-red-400 hover:text-red-300 px-3 py-1 border border-red-900/50 rounded hover:bg-red-900/20 transition">
-                                [ CLOSE SESSION ]
-                            </button>
-                        </div>
-                    </div>
-                </motion.div>
-            );
-        };
-
-        // --- MATRIX RAIN EFFECT ---
         const MatrixRain = () => {
             const canvasRef = useRef(null);
             
@@ -406,491 +323,1126 @@
             }, []);
 
             return <canvas id="matrix-canvas" ref={canvasRef}></canvas>;
-        }
+        };
 
-        // --- PARTICLE BACKGROUND ---
-        const ParticleBackground = () => {
-            const canvasRef = useRef(null);
+        const TerminalModal = ({ onClose }) => {
+            const [input, setInput] = useState("");
+            const [history, setHistory] = useState([
+                { type: 'system', content: 'Welcome to AK.OS v3.1. Type "help" for commands.' }
+            ]);
+            const scrollRef = useRef(null);
 
             useEffect(() => {
-                const canvas = canvasRef.current;
-                const ctx = canvas.getContext('2d');
-                let width, height;
-                let particles = [];
-                let animationFrameId;
+                if(scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+            }, [history]);
 
-                const particleCount = 60;
-                const connectionDistance = 150;
-                const mouseDistance = 200;
+            const handleCommand = (e) => {
+                if (e.key === 'Enter') {
+                    const cmd = input.trim().toLowerCase();
+                    let response = { type: 'text', content: '' };
 
-                let mouse = { x: null, y: null };
-
-                const resize = () => {
-                    width = canvas.width = window.innerWidth;
-                    height = canvas.height = window.innerHeight;
-                };
-
-                class Particle {
-                    constructor() {
-                        this.x = Math.random() * width;
-                        this.y = Math.random() * height;
-                        this.vx = (Math.random() - 0.5) * 0.5;
-                        this.vy = (Math.random() - 0.5) * 0.5;
-                        this.size = Math.random() * 2;
+                    switch (cmd) {
+                        case 'help':
+                            response.content = "Available commands: help, about, projects, contact, clear, matrix, reset, exit";
+                            break;
+                        case 'about':
+                            response.content = "Full Stack Engineer & NUS-AIDF Fellow specializing in FinTech/RegTech.";
+                            break;
+                        case 'projects':
+                            response.content = "Modules: Settle X, Bazaar Odisha, Heritage Yatri, Nexus Attendance.";
+                            break;
+                        case 'contact':
+                            window.open("https://mail.google.com/mail/?view=cm&fs=1&to=aakashkhamarilv@gmail.com", "_blank");
+                            response.content = "Opening secure communication channel...";
+                            break;
+                        case 'clear':
+                            setHistory([]);
+                            setInput("");
+                            return;
+                        case 'matrix':
+                            const isActive = document.body.classList.toggle('matrix-active');
+                            response.content = isActive 
+                                ? "Wake up, Neo... (Type 'matrix' again to disable)" 
+                                : "Matrix Mode Deactivated.";
+                            break;
+                        case 'reset':
+                            document.body.classList.remove('matrix-active');
+                            response.content = "System visuals reset.";
+                            break;
+                        case 'exit':
+                            onClose();
+                            return;
+                        default:
+                            response.content = `Command not found: ${cmd}. Try "help".`;
+                            response.type = 'error';
                     }
 
-                    update() {
-                        this.x += this.vx;
-                        this.y += this.vy;
-
-                        if (this.x < 0 || this.x > width) this.vx *= -1;
-                        if (this.y < 0 || this.y > height) this.vy *= -1;
-                        
-                        if (mouse.x != null) {
-                            let dx = mouse.x - this.x;
-                            let dy = mouse.y - this.y;
-                            let distance = Math.sqrt(dx * dx + dy * dy);
-                            if (distance < mouseDistance) {
-                                const force = (mouseDistance - distance) / mouseDistance;
-                                const directionX = (dx / distance) * force * 0.5;
-                                const directionY = (dy / distance) * force * 0.5;
-                                this.vx -= directionX;
-                                this.vy -= directionY;
-                            }
-                        }
-                    }
-
-                    draw() {
-                        ctx.fillStyle = 'rgba(148, 163, 184, 0.5)';
-                        ctx.beginPath();
-                        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                        ctx.fill();
-                    }
+                    setHistory([...history, { type: 'user', content: cmd }, response]);
+                    setInput("");
                 }
+            };
 
-                const init = () => {
-                    particles = [];
-                    for (let i = 0; i < particleCount; i++) {
-                        particles.push(new Particle());
+            return (
+                <motion.div 
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+                >
+                    <div className="w-full max-w-2xl bg-slate-950 border border-slate-700 rounded-lg shadow-2xl overflow-hidden font-mono text-sm relative flex flex-col">
+                        <div className="bg-slate-900 p-2 border-b border-slate-700 flex justify-between items-center">
+                            <div className="flex gap-2">
+                                <div className="w-3 h-3 rounded-full bg-red-500 cursor-pointer hover:bg-red-400" onClick={onClose} title="Close Terminal"></div>
+                                <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                                <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                            </div>
+                            <div className="text-slate-400 text-xs">admin@ak-dev:~</div>
+                        </div>
+                        
+                        <div ref={scrollRef} className="h-80 overflow-y-auto p-4 space-y-2 text-slate-300">
+                            {history.map((line, i) => (
+                                <div key={i} className={`${line.type === 'user' ? 'text-neonBlue' : line.type === 'error' ? 'text-red-400' : 'text-slate-300'}`}>
+                                    {line.type === 'user' ? '> ' : ''}{line.content}
+                                </div>
+                            ))}
+                            <div className="flex items-center text-neonBlue">
+                                <span className="mr-2">{'>'}</span>
+                                <input 
+                                    type="text" 
+                                    value={input}
+                                    onChange={(e) => setInput(e.target.value)}
+                                    onKeyDown={handleCommand}
+                                    className="bg-transparent border-none outline-none flex-1 text-slate-100"
+                                    autoFocus
+                                    placeholder="Type 'help'..."
+                                />
+                            </div>
+                        </div>
+
+                         <div className="p-2 border-t border-slate-800 bg-slate-900/50 flex justify-end">
+                            <button onClick={onClose} className="text-xs text-red-400 hover:text-red-300 px-3 py-1 border border-red-900/50 rounded hover:bg-red-900/20 transition">
+                                [ TERMINATE ]
+                            </button>
+                        </div>
+                    </div>
+                </motion.div>
+            );
+        };
+
+        // --- EXISTING COMPONENTS ---
+
+        const AdvancedCursor = () => {
+            const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+            const [isHovering, setIsHovering] = useState(false);
+
+            useEffect(() => {
+                const updateMouse = (e) => setMousePos({ x: e.clientX, y: e.clientY });
+                const updateHoverState = (e) => {
+                    if (e.target.tagName === 'A' || e.target.tagName === 'BUTTON' || e.target.closest('.interactive')) {
+                        setIsHovering(true);
+                    } else {
+                        setIsHovering(false);
                     }
                 };
 
-                const animate = () => {
-                    ctx.clearRect(0, 0, width, height);
-                    for (let i = 0; i < particles.length; i++) {
-                        particles[i].update();
-                        particles[i].draw();
-                        for (let j = i; j < particles.length; j++) {
-                            const dx = particles[i].x - particles[j].x;
-                            const dy = particles[i].y - particles[j].y;
-                            const distance = Math.sqrt(dx * dx + dy * dy);
-                            if (distance < connectionDistance) {
-                                ctx.beginPath();
-                                ctx.strokeStyle = `rgba(100, 116, 139, ${1 - distance / connectionDistance})`;
-                                ctx.lineWidth = 1;
-                                ctx.moveTo(particles[i].x, particles[i].y);
-                                ctx.lineTo(particles[j].x, particles[j].y);
-                                ctx.stroke();
-                            }
-                        }
-                    }
-                    animationFrameId = requestAnimationFrame(animate);
-                };
-
-                window.addEventListener('resize', resize);
-                window.addEventListener('mousemove', (e) => {
-                    mouse.x = e.x;
-                    mouse.y = e.y;
-                });
-                window.addEventListener('mouseout', () => {
-                    mouse.x = undefined;
-                    mouse.y = undefined;
-                });
-
-                resize();
-                init();
-                animate();
-
+                window.addEventListener('mousemove', updateMouse);
+                window.addEventListener('mouseover', updateHoverState);
                 return () => {
-                    window.removeEventListener('resize', resize);
-                    cancelAnimationFrame(animationFrameId);
+                    window.removeEventListener('mousemove', updateMouse);
+                    window.removeEventListener('mouseover', updateHoverState);
                 };
             }, []);
 
-            return <canvas id="canvas-bg" ref={canvasRef}></canvas>;
-        };
-
-        // --- SECTIONS ---
-
-        const Navbar = ({ onOpenTerminal }) => {
-            const [isOpen, setIsOpen] = useState(false);
-            const { scrollYProgress } = useScroll();
-            const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30, restDelta: 0.001 });
-            const resumeLink = "https://drive.google.com/file/d/1kmypPw8J2S6Wl9_C_Zcg0O9XijObZVFh/view?usp=sharing";
-            const emailLink = "https://mail.google.com/mail/?view=cm&fs=1&to=aakashkhamarilv@gmail.com";
-
             return (
-                <>
-                    <motion.div className="fixed top-0 left-0 right-0 h-1 bg-cyan-500 origin-left z-[200]" style={{ scaleX }} />
-                    <nav className="fixed top-0 w-full z-[100] bg-slate-950/80 backdrop-blur-xl border-b border-white/5">
-                        <div className="max-w-7xl mx-auto px-6 h-16 flex justify-between items-center">
-                            <div className="flex items-center gap-2 group cursor-pointer z-50" onClick={onOpenTerminal}>
-                                <div className="p-1 bg-cyan-500/10 rounded border border-cyan-500/20 group-hover:bg-cyan-500/20 transition-colors">
-                                    <span className="text-cyan-400"><Icons.Terminal /></span>
-                                </div>
-                                <span className="font-bold text-white tracking-wide">AK<span className="text-cyan-500">.DEV</span></span>
-                            </div>
-
-                            <div className="md:hidden z-50 flex items-center gap-4">
-                                <button onClick={onOpenTerminal} className="text-cyan-400 hover:text-cyan-300">
-                                    <Icons.Command />
-                                </button>
-                                <button onClick={() => setIsOpen(!isOpen)} className="text-slate-300 hover:text-white">
-                                    {isOpen ? <Icons.Close /> : <Icons.Menu />}
-                                </button>
-                            </div>
-
-                            <div className="hidden md:flex gap-8 text-xs mono text-slate-400 items-center">
-                                {['PROJECTS', 'STACK', 'LOGS'].map((item) => (
-                                    <a key={item} href={`#${item.toLowerCase()}`} className="relative group py-2">
-                                        <span className="group-hover:text-cyan-400 transition-colors">{item}</span>
-                                        <span className="absolute bottom-0 left-0 w-0 h-[1px] bg-cyan-400 group-hover:w-full transition-all duration-300"></span>
-                                    </a>
-                                ))}
-                                <button onClick={onOpenTerminal} className="hover:text-cyan-400 transition-colors flex items-center gap-1">
-                                    <Icons.Command /> CMD
-                                </button>
-                                <a href={resumeLink} target="_blank" rel="noopener noreferrer" className="relative group py-2">
-                                    <span className="group-hover:text-cyan-400 transition-colors">RESUME</span>
-                                    <span className="absolute bottom-0 left-0 w-0 h-[1px] bg-cyan-400 group-hover:w-full transition-all duration-300"></span>
-                                </a>
-                                <a href={emailLink} target="_blank" rel="noopener noreferrer" className="px-4 py-1.5 bg-white text-black font-bold hover:bg-cyan-400 transition-colors rounded-sm">
-                                    HIRE_ME
-                                </a>
-                            </div>
-                        </div>
-
-                        <AnimatePresence>
-                            {isOpen && (
-                                <motion.div 
-                                    initial={{ opacity: 0, height: 0 }}
-                                    animate={{ opacity: 1, height: 'auto' }}
-                                    exit={{ opacity: 0, height: 0 }}
-                                    className="md:hidden border-t border-white/5 bg-slate-950/95 backdrop-blur-xl overflow-hidden"
-                                >
-                                    <div className="flex flex-col p-6 gap-6 text-sm mono text-slate-400">
-                                        {['PROJECTS', 'STACK', 'LOGS'].map((item) => (
-                                            <a key={item} href={`#${item.toLowerCase()}`} onClick={() => setIsOpen(false)} className="hover:text-cyan-400 py-2 border-b border-white/5 tracking-widest">
-                                                ./{item}
-                                            </a>
-                                        ))}
-                                        <a href={resumeLink} target="_blank" rel="noopener noreferrer" onClick={() => setIsOpen(false)} className="hover:text-cyan-400 py-2 border-b border-white/5 flex items-center gap-2 tracking-widest">
-                                            <Icons.FileText /> VIEW RESUME
-                                        </a>
-                                        <a href={emailLink} target="_blank" rel="noopener noreferrer" onClick={() => setIsOpen(false)} className="py-4 text-center bg-cyan-500 text-black font-bold mt-4 rounded-lg shadow-lg shadow-cyan-500/20">
-                                            HIRE_ME
-                                        </a>
-                                    </div>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-                    </nav>
-                </>
-            );
-        };
-
-        const Hero = () => {
-             const resumeLink = "https://drive.google.com/file/d/1kmypPw8J2S6Wl9_C_Zcg0O9XijObZVFh/view?usp=sharing";
-
-             return (
-                <section className="relative flex flex-col justify-center px-6 pt-32 pb-40 md:pt-20 md:pb-0 min-h-[100dvh]">
-                    <div className="max-w-5xl mx-auto w-full z-[60] relative">
-                        <motion.div 
-                            initial={{ opacity: 0, y: 20 }} 
-                            animate={{ opacity: 1, y: 0 }}
-                            className="inline-flex items-center gap-2 px-3 py-1 border border-cyan-500/30 rounded-full bg-cyan-950/30 mb-8 backdrop-blur-md"
-                        >
-                            <span className="relative flex h-2 w-2">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
-                            </span>
-                            <span className="text-[10px] md:text-xs mono text-cyan-300 tracking-wider">NUS-AIDF FINTECH FELLOW</span>
-                        </motion.div>
-
-                        <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-bold text-white mb-6 md:mb-8 leading-[1.1] md:leading-[0.9] tracking-tight">
-                            BUILDING <br />
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600">
-                                <DecryptText text="SECURE_SYSTEMS" />
-                            </span>
-                        </h1>
-
-                        <p className="text-slate-400 max-w-2xl text-base md:text-xl mb-8 md:mb-12 leading-relaxed border-l-2 border-slate-800 pl-6">
-                            Full Stack Developer & Computer Science Specialist. <br/>
-                            Architecting <span className="text-white font-medium">RegTech, Blockchain, and Scalable Web Solutions</span>.
-                        </p>
-
-                        <div className="flex flex-wrap gap-4">
-                            <motion.a 
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                href="#projects" 
-                                className="w-full sm:w-auto text-center justify-center px-6 py-3 md:px-8 md:py-4 bg-cyan-500 hover:bg-cyan-400 text-black font-bold rounded-lg transition-all shadow-[0_0_30px_rgba(6,182,212,0.3)] flex items-center gap-2 text-sm md:text-base relative z-20"
-                            >
-                                View Case Studies <Icons.Arrow />
-                            </motion.a>
-                            
-                            <motion.a 
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                href={resumeLink} 
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="w-full sm:w-auto text-center justify-center px-6 py-3 md:px-8 md:py-4 border border-slate-700 bg-slate-900/50 hover:border-cyan-500 text-cyan-400 rounded-lg transition-colors flex items-center gap-2 backdrop-blur-sm text-sm md:text-base relative z-20"
-                            >
-                                <Icons.FileText /> Resume
-                            </motion.a>
-
-                            <motion.a 
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                href="https://github.com/Aakash-Khamari" 
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="w-full sm:w-auto text-center justify-center px-6 py-3 md:px-8 md:py-4 border border-slate-700 bg-slate-900/50 hover:border-white text-slate-300 rounded-lg transition-colors flex items-center gap-2 backdrop-blur-sm text-sm md:text-base relative z-20"
-                            >
-                                <Icons.Github /> GitHub
-                            </motion.a>
-                        </div>
-                    </div>
-
+                <div className="fixed inset-0 pointer-events-none z-[9999] mix-blend-difference hidden md:block">
                     <motion.div 
-                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1 }}
-                        className="absolute bottom-2 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-[10px] md:text-xs mono text-slate-500 pointer-events-none z-10"
+                        className="absolute w-2 h-2 bg-white rounded-full"
+                        animate={{ x: mousePos.x - 4, y: mousePos.y - 4 }}
+                        transition={{ type: "tween", ease: "linear", duration: 0 }}
+                    />
+                    <motion.div 
+                        className="absolute border border-white rounded-full flex items-center justify-center"
+                        animate={{ 
+                            x: mousePos.x - 20, y: mousePos.y - 20,
+                            width: isHovering ? 60 : 40, height: isHovering ? 60 : 40,
+                            opacity: isHovering ? 1 : 0.5,
+                            x: isHovering ? mousePos.x - 30 : mousePos.x - 20,
+                            y: isHovering ? mousePos.y - 30 : mousePos.y - 20
+                        }}
+                        transition={{ type: "spring", stiffness: 150, damping: 15 }}
                     >
-                        SCROLL TO EXPLORE
-                        <div className="w-[1px] h-8 md:h-12 bg-gradient-to-b from-cyan-500 to-transparent"></div>
+                         <motion.div 
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: isHovering ? 1 : 0, rotate: isHovering ? 90 : 0 }}
+                            className="w-full h-[1px] bg-white/30 absolute"
+                        />
+                         <motion.div 
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: isHovering ? 1 : 0, rotate: isHovering ? 90 : 0 }}
+                            className="h-full w-[1px] bg-white/30 absolute"
+                        />
                     </motion.div>
-                </section>
+                </div>
             );
         };
 
-        const ProjectCard = ({ project, index }) => {
-            return (
-                <motion.div
-                    initial={{ opacity: 0, y: 50 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, margin: "-50px" }}
-                    transition={{ delay: index * 0.1 }}
-                    className="group perspective-1000 z-10 relative"
-                >
-                    <TiltCard className="h-full">
-                        <div className="p-6 md:p-8 h-full flex flex-col relative overflow-hidden rounded-xl">
-                            {project.winner && (
-                                <div className="absolute top-0 right-0 bg-yellow-500/20 text-yellow-400 text-[10px] font-bold px-3 py-1 rounded-bl-lg border-l border-b border-yellow-500/50 flex items-center gap-1 z-20">
-                                    ★ AWARD WINNER
-                                </div>
-                            )}
-                            <div className="flex justify-between items-start mb-6 mt-2">
-                                <div className="text-[10px] mono text-cyan-400 border border-cyan-500/20 bg-cyan-950/30 px-2 py-1 rounded">
-                                    {project.type}
-                                </div>
-                            </div>
-                            <h3 className="text-2xl md:text-3xl font-bold text-white mb-4 group-hover:text-cyan-400 transition-colors">
-                                {project.title}
-                            </h3>
-                            <p className="text-slate-400 text-sm leading-relaxed mb-8 flex-grow">
-                                {project.desc}
-                            </p>
-                            <div className="bg-black/40 border-l-2 border-purple-500 p-4 mb-6 rounded-r">
-                                <p className="text-[10px] uppercase text-slate-500 mono mb-1">Impact Metric</p>
-                                <p className="text-white text-sm mono font-medium">{project.metric}</p>
-                            </div>
-                            <div className="pt-6 border-t border-white/5 flex items-center justify-between">
-                                <div className="flex gap-2">
-                                    {project.stack.map(tech => (
-                                        <span key={tech} className="text-[10px] text-slate-500 bg-slate-800/50 px-2 py-1 rounded">
-                                            {tech}
-                                        </span>
-                                    ))}
-                                </div>
-                                <div className="flex gap-3">
-                                    <a href="#" className="p-2 hover:bg-white/10 rounded-full transition-colors text-slate-300 hover:text-white"><Icons.Github /></a>
-                                    <a href="#" className="p-2 hover:bg-white/10 rounded-full transition-colors text-slate-300 hover:text-white"><Icons.External /></a>
-                                </div>
-                            </div>
-                        </div>
-                    </TiltCard>
-                </motion.div>
-            )
-        }
+        const WarpBackground = ({ theme }) => {
+            const canvasRef = useRef(null);
+            
+            useEffect(() => {
+                const canvas = canvasRef.current;
+                const ctx = canvas.getContext('2d');
+                let animationFrameId;
+                
+                let width = window.innerWidth;
+                let height = window.innerHeight;
+                canvas.width = width;
+                canvas.height = height;
 
-        const Projects = () => {
-            const data = [
-                {
-                    title: "Settle X (Project XIX)",
-                    type: "FINTECH / REGTECH",
-                    desc: "Treasury-as-a-Service architecture decoupling settlement from compliance. Built for NUS-AIDF Capstone with Razorpay.",
-                    metric: "90% Cost Reduction via wholesale arbitrage. Settlement time T+5 → T+1.",
-                    stack: ["Python", "SQL", "React"],
-                    winner: true
-                },
-                {
-                    title: "Bazaar Odisha",
-                    type: "E-COMMERCE / GOVT",
-                    desc: "Statewide directory connecting MSMEs/SHGs. Low-bandwidth optimization with multilingual support.",
-                    metric: "Mapped 68,451 units. Scalable to 20L+ MSMEs. Secured INR 1 Lakh funding.",
-                    stack: ["React", "Firebase"],
-                    winner: true
-                },
-                {
-                    title: "Nexus Attendance",
-                    type: "GEO-SECURITY",
-                    desc: "Location-based attendance system using Google Maps API with advanced spoof-detection logic.",
-                    metric: "95% geofence accuracy. Reduced spoofing risks by 90%.",
-                    stack: ["Kotlin", "Google Maps"],
-                    winner: false
+                const stars = [];
+                const numStars = 500;
+                const centerX = width / 2;
+                const centerY = height / 2;
+
+                for(let i = 0; i < numStars; i++) {
+                    stars.push({
+                        x: Math.random() * width - centerX,
+                        y: Math.random() * height - centerY,
+                        z: Math.random() * width
+                    });
                 }
+
+                const animate = () => {
+                    const isDynamic = document.body.classList.contains('dynamic-active');
+                    let trailColor;
+
+                    if (isDynamic) {
+                         trailColor = theme === 'dark' ? "rgba(5, 5, 5, 0.4)" : "rgba(240, 244, 248, 0.4)";
+                    } else {
+                         trailColor = theme === 'dark' ? "rgba(5, 5, 5, 0.4)" : "rgba(240, 244, 248, 0.4)";
+                    }
+
+                    ctx.fillStyle = trailColor;
+                    ctx.fillRect(0, 0, width, height);
+
+                    stars.forEach(star => {
+                        star.z -= 3;
+                        if (star.z <= 0) {
+                            star.z = width;
+                            star.x = Math.random() * width - centerX;
+                            star.y = Math.random() * height - centerY;
+                        }
+                        const x = (star.x / star.z) * width + centerX;
+                        const y = (star.y / star.z) * height + centerY;
+                        const size = (1 - star.z / width) * 2.5;
+                        const alpha = (1 - star.z / width);
+                        ctx.beginPath();
+                        const starColor = theme === 'dark' ? `rgba(200, 220, 255, ${alpha})` : `rgba(99, 102, 241, ${alpha})`; 
+                        ctx.fillStyle = starColor;
+                        ctx.arc(x, y, size, 0, Math.PI * 2);
+                        ctx.fill();
+                    });
+                    animationFrameId = requestAnimationFrame(animate);
+                };
+                animate();
+                const handleResize = () => {
+                    width = window.innerWidth;
+                    height = window.innerHeight;
+                    canvas.width = width;
+                    canvas.height = height;
+                };
+                window.addEventListener('resize', handleResize);
+                return () => {
+                    window.removeEventListener('resize', handleResize);
+                    cancelAnimationFrame(animationFrameId);
+                };
+            }, [theme]);
+
+            return <canvas ref={canvasRef} className="fixed inset-0 z-0 opacity-40 pointer-events-none" />;
+        };
+
+        const NavDock = ({ activeSection, theme, onOpenTerminal }) => {
+            const items = [
+                { id: 'home', icon: Layout, label: 'MAIN' },
+                { id: 'projects', icon: Layers, label: 'WORK' },
+                { id: 'stack', icon: Cpu, label: 'CORE' },
+                { id: 'contact', icon: Mail, label: 'COMM' }
             ];
 
             return (
-                <section id="projects" className="py-20 md:py-32 px-6 relative z-10">
-                    <div className="max-w-7xl mx-auto">
-                        <div className="flex flex-col md:flex-row md:items-end justify-between mb-20 gap-6">
-                            <div>
-                                <h2 className="text-3xl md:text-4xl lg:text-6xl font-bold text-white mb-4">
-                                    Development <br/><span className="text-slate-700">Case Studies</span>
-                                </h2>
-                                <div className="h-1.5 w-24 bg-cyan-500 rounded-full"></div>
+                <div className={`fixed left-0 top-0 h-full w-20 hidden md:flex flex-col items-center justify-between py-10 z-50 glass-panel border-l-0 border-y-0 transition-all duration-500`}>
+                    <div className="flex flex-col items-center gap-6">
+                        {/* AK BADGE FIX: Added ak-badge class and conditional coloring */}
+                        <div className={`ak-badge w-10 h-10 rounded-lg flex items-center justify-center font-bold font-display text-xl tracking-tighter shadow-md transition-all duration-300 ${theme === 'dark' ? 'bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.3)]' : 'bg-slate-900 text-white shadow-[0_4px_15px_rgba(0,0,0,0.15)]'}`}>
+                            AK
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col gap-8">
+                        {items.map((item) => {
+                            const Icon = item.icon;
+                            const isActive = activeSection === item.id;
+                            return (
+                                <a key={item.id} href={`#${item.id}`} className="relative group interactive flex flex-col items-center gap-1">
+                                    <div className={`p-3 rounded-xl transition-all duration-300 ${isActive ? (theme === 'dark' ? 'bg-white/10 text-white shadow-[0_0_15px_rgba(59,130,246,0.5)]' : 'bg-slate-900 text-white shadow-[0_4px_15px_rgba(59,130,246,0.3)]') : (theme === 'dark' ? 'text-gray-500 hover:text-white hover:bg-white/5' : 'text-slate-400 hover:text-slate-900 hover:bg-slate-200')}`}>
+                                        <Icon size={20} strokeWidth={1.5} />
+                                    </div>
+                                    <span className="text-[9px] font-mono tracking-widest opacity-50 dark:text-gray-400 text-slate-500">{item.label}</span>
+                                    {isActive && <motion.div layoutId="activeNav" className="absolute -left-[21px] top-3 w-1 h-6 bg-blue-500 rounded-r-full shadow-[0_0_15px_rgba(59,130,246,0.8)]" />}
+                                </a>
+                            )
+                        })}
+                        
+                        {/* Terminal Button */}
+                         <button onClick={onOpenTerminal} className="relative group interactive flex flex-col items-center gap-1">
+                            <div className={`p-3 rounded-xl transition-all duration-300 text-gray-500 hover:text-white hover:bg-white/5 ${theme === 'dark' ? 'hover:bg-white/10' : 'hover:bg-slate-200 hover:text-slate-900'}`}>
+                                <Terminal size={20} strokeWidth={1.5} />
                             </div>
-                            <p className="text-slate-500 text-right font-mono text-sm max-w-md hidden md:block">
-                                // SELECTED WORKS 2024-2026 <br/>
-                                // STATUS: DEPLOYED & AWARDED
+                            <span className="text-[9px] font-mono tracking-widest opacity-50 dark:text-gray-400 text-slate-500">CMD</span>
+                        </button>
+                    </div>
+
+                    <div className="flex flex-col items-center gap-6 text-gray-600 dark:text-gray-600 text-slate-400">
+                        {/* Version Number */}
+                        <div className="flex flex-col items-center gap-2">
+                            <div className="w-[1px] h-8 bg-gray-800 dark:bg-gray-800 bg-slate-300"></div>
+                            <span className="writing-vertical text-[10px] font-mono tracking-widest opacity-40">V.3.1</span>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        /* * --- FIXED: ThemeIntensityController --- 
+         * Replaced <input> with custom div-based slider logic 
+         * for smoother "up is up" dragging and wider hit area.
+         */
+        const ThemeIntensityController = ({ intensity, setIntensity, isVisible }) => {
+            const trackRef = useRef(null);
+            const [isDragging, setIsDragging] = useState(false);
+
+            // Calculate icon based on intensity
+            const getIcon = () => {
+                if (intensity < 30) return <Moon size={16} className="text-blue-200" />;
+                if (intensity < 70) return <div className="w-3 h-3 rounded-full bg-gradient-to-t from-orange-400 to-purple-500" />; // Dawn
+                return <Sun size={16} className="text-yellow-500" />;
+            };
+
+            const handlePointerDown = (e) => {
+                e.preventDefault();
+                setIsDragging(true);
+                updateIntensity(e);
+            };
+
+            const handlePointerMove = (e) => {
+                if (isDragging) {
+                    e.preventDefault();
+                    updateIntensity(e);
+                }
+            };
+
+            const handlePointerUp = () => {
+                setIsDragging(false);
+            };
+
+            const updateIntensity = (e) => {
+                if (!trackRef.current) return;
+                const rect = trackRef.current.getBoundingClientRect();
+                const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+                
+                // Calculate percentage from bottom (100% at top, 0% at bottom)
+                // rect.bottom is the higher Y value (screen coords go down)
+                // so (rect.bottom - clientY) gives pixels from bottom
+                let percentage = ((rect.bottom - clientY) / rect.height) * 100;
+                
+                // Clamp
+                if (percentage < 0) percentage = 0;
+                if (percentage > 100) percentage = 100;
+                
+                setIntensity(Math.round(percentage));
+            };
+
+            // Global event listeners for dragging outside the element
+            useEffect(() => {
+                if (isDragging) {
+                    window.addEventListener('pointermove', handlePointerMove);
+                    window.addEventListener('pointerup', handlePointerUp);
+                    window.addEventListener('touchmove', handlePointerMove);
+                    window.addEventListener('touchend', handlePointerUp);
+                }
+                return () => {
+                    window.removeEventListener('pointermove', handlePointerMove);
+                    window.removeEventListener('pointerup', handlePointerUp);
+                    window.removeEventListener('touchmove', handlePointerMove);
+                    window.removeEventListener('touchend', handlePointerUp);
+                };
+            }, [isDragging]);
+
+            return (
+                <AnimatePresence>
+                    {isVisible && (
+                        <motion.div
+                            initial={{ opacity: 0, height: 0, y: 20 }}
+                            animate={{ opacity: 1, height: 200, y: 0 }}
+                            exit={{ opacity: 0, height: 0, y: 20 }}
+                            className="fixed bottom-24 left-24 z-50 w-20 glass-panel rounded-full flex flex-col items-center justify-end pb-2 overflow-hidden cursor-ns-resize"
+                            style={{ pointerEvents: 'auto' }}
+                            onPointerDown={handlePointerDown}
+                            ref={trackRef}
+                        >
+                            {/* Track Visual */}
+                            <div className="absolute top-4 bottom-10 w-1 bg-gradient-to-t from-blue-900 via-purple-500 to-yellow-200 rounded-full opacity-30 pointer-events-none"></div>
+                            
+                            {/* Visual Indicator (Thumb) */}
+                            <motion.div 
+                                className="absolute bottom-10 w-6 h-6 rounded-full bg-white shadow-[0_0_15px_rgba(255,255,255,0.5)] flex items-center justify-center z-10 pointer-events-none"
+                                style={{ bottom: `${10 + (intensity * 0.75)}%` }} // Map 0-100 to percentage height relative to container
+                            >
+                                <div className="w-1.5 h-1.5 rounded-full bg-slate-900"></div>
+                            </motion.div>
+
+                            {/* Bottom Icon */}
+                            <div className="mb-2 z-10 opacity-80 mt-auto pointer-events-none">
+                                {getIcon()}
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            );
+        };
+
+        const ThemeSwitch = ({ theme, toggleTheme, toggleSlider, sliderVisible }) => {
+            return (
+                <div 
+                    className={`fixed bottom-10 left-24 z-50 w-10 h-10 rounded-full flex items-center justify-center cursor-pointer transition-all duration-300 glass-panel hover:scale-110 shadow-lg ${theme === 'dark' ? 'border-white/10' : 'border-slate-300'}`}
+                    onClick={() => {
+                        toggleSlider();
+                    }}
+                    title="Adjust Light Intensity"
+                >
+                     <motion.div 
+                        key={theme}
+                        animate={{ rotate: sliderVisible ? 180 : 0 }}
+                        transition={{ duration: 0.3 }}
+                    >
+                        {theme === 'dark' ? <Moon size={16} className="text-yellow-400 fill-current" /> : <Sun size={18} className="text-orange-500" />}
+                    </motion.div>
+                </div>
+            );
+        };
+
+        const StatusHUD = () => {
+            const [time, setTime] = useState(new Date());
+            const { scrollYProgress } = useScroll();
+            const scrollPercentage = useTransform(scrollYProgress, [0, 1], [0, 100]);
+            const [displayScroll, setDisplayScroll] = useState(0);
+
+            useEffect(() => {
+                const timer = setInterval(() => setTime(new Date()), 1000);
+                return () => clearInterval(timer);
+            }, []);
+
+            useMemo(() => {
+                const unsubscribe = scrollPercentage.onChange((v) => setDisplayScroll(Math.round(v)));
+                return () => unsubscribe();
+            }, [scrollPercentage]);
+
+            return (
+                <div className="fixed right-6 top-6 z-40 flex flex-col items-end gap-2 font-mono text-[10px] pointer-events-none mix-blend-normal dark:text-gray-400 text-slate-500">
+                    <div className="flex items-center gap-2 glass-panel px-3 py-1.5 rounded-full border-blue-500/20 dark:text-gray-300 text-slate-600 font-medium">
+                        <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
+                        <span className="tracking-widest">SYSTEM: ONLINE</span>
+                    </div>
+                    <div className="flex flex-col items-end gap-0.5 mt-2">
+                        <div className="flex items-center gap-2"><Clock size={10} /><span>{time.toLocaleTimeString([], { hour12: false })}</span></div>
+                        <div className="flex items-center gap-2"><MapPin size={10} /><span>BALANGIR, OD</span></div>
+                        <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400 font-bold"><Activity size={10} /><span>SCROLL: {displayScroll}%</span></div>
+                    </div>
+                </div>
+            );
+        };
+
+        const MagneticButton = ({ children, className = "", onClick, disabled }) => {
+            return (
+                <motion.button
+                    whileHover={{ scale: disabled ? 1 : 1.05 }}
+                    whileTap={{ scale: disabled ? 1 : 0.95 }}
+                    onClick={onClick}
+                    disabled={disabled}
+                    className={`interactive relative group overflow-hidden rounded-lg ${className} ${disabled ? 'cursor-not-allowed opacity-80' : ''}`}
+                >
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-purple-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    {children}
+                </motion.button>
+            );
+        };
+
+        const HeroSection = () => {
+            const resumeLink = "https://drive.google.com/file/d/1kmypPw8J2S6Wl9_C_Zcg0O9XijObZVFh/view?usp=sharing";
+
+            return (
+                <section id="home" className="min-h-screen flex items-center pl-4 md:pl-28 pr-4 relative overflow-hidden">
+                    <div className="max-w-5xl w-full z-10">
+                        <motion.div 
+                            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}
+                            className="flex items-center gap-3 mb-6"
+                        >
+                            <span className="px-3 py-1 rounded-full border border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-400 text-xs font-mono font-bold tracking-widest flex items-center gap-2 shadow-[0_0_15px_rgba(59,130,246,0.3)]">
+                                <span className="w-1 h-1 bg-blue-500 rounded-full animate-ping"></span>
+                                READY FOR DEPLOYMENT
+                            </span>
+                        </motion.div>
+
+                        <motion.h1 
+                            initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.2 }}
+                            className="text-5xl sm:text-7xl md:text-9xl font-display font-bold dark:text-white text-slate-900 leading-[0.9] tracking-tighter mb-8"
+                        >
+                            ENGINEERING <br />
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-700 via-purple-700 to-slate-900 dark:from-blue-500 dark:via-purple-500 dark:to-white text-glow">
+                                <DecryptText text="DIGITAL FUTURE" />
+                            </span>
+                        </motion.h1>
+
+                        <motion.p 
+                            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8, delay: 0.4 }}
+                            className="max-w-xl dark:text-gray-400 text-slate-600 text-sm md:text-lg font-mono leading-relaxed border-l-2 border-blue-500/50 pl-6 mb-10"
+                        >
+                            Full-stack engineer architecting high-performance FinTech infrastructure and scalable systems.
+                            <br/><br/>
+                            <span className="dark:text-white text-slate-900 font-bold">NUS-AIDF Fellow</span> & <span className="dark:text-white text-slate-900 font-bold">Award-Winning Developer</span>.
+                        </motion.p>
+
+                        <motion.div 
+                            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8, delay: 0.6 }}
+                            className="flex flex-wrap gap-4"
+                        >
+                            <a href="#projects" className="w-full sm:w-auto">
+                                <MagneticButton className="w-full px-8 py-4 bg-slate-900 dark:bg-white text-white dark:text-black font-bold tracking-wide flex items-center justify-center gap-2 hover:bg-slate-800 dark:hover:bg-gray-200 transition-colors shadow-lg">
+                                    <Terminal size={18} />
+                                    EXPLORE WORK
+                                </MagneticButton>
+                            </a>
+                            <a href={resumeLink} target="_blank" className="w-full sm:w-auto">
+                                <MagneticButton className="w-full px-8 py-4 glass-panel dark:text-white text-slate-900 font-medium tracking-wide flex items-center justify-center gap-2 border dark:border-white/10 border-black/10 dark:hover:border-white/30 hover:border-black/30 transition-colors">
+                                    <FileText size={18} />
+                                    RESUME
+                                </MagneticButton>
+                            </a>
+                            <a href="https://github.com/Aakash-Khamari" target="_blank" className="w-full sm:w-auto">
+                                <MagneticButton className="w-full px-8 py-4 glass-panel dark:text-white text-slate-900 font-medium tracking-wide flex items-center justify-center gap-2 border dark:border-white/10 border-black/10 dark:hover:border-white/30 hover:border-black/30 transition-colors">
+                                    <Github size={18} />
+                                    GITHUB
+                                </MagneticButton>
+                            </a>
+                        </motion.div>
+                    </div>
+                    <div className="absolute right-0 bottom-0 w-1/3 h-full bg-gradient-to-l from-blue-900/10 to-transparent pointer-events-none"></div>
+                    <div className="scanline"></div>
+                </section>
+            );
+        };
+
+        const ProjectCard = ({ title, category, description, stack, isLarge, isFeatured, link }) => {
+            return (
+                <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    whileHover={{ y: -5 }}
+                    className={`interactive group relative rounded-2xl p-8 overflow-hidden transition-all duration-500 
+                    ${isLarge ? 'md:col-span-2' : ''} 
+                    ${isFeatured ? 'glass-panel-gold border-yellow-500/30 shadow-[0_0_30px_rgba(251,191,36,0.1)]' : 'glass-panel hover:border-blue-500/30'}`}
+                >
+                    <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 ${isFeatured ? 'bg-gradient-to-br from-yellow-500/10 to-orange-500/10' : 'bg-gradient-to-br from-blue-500/5 to-purple-500/5'}`}></div>
+                    
+                    <div className="relative z-10 flex flex-col h-full justify-between">
+                        <div>
+                            <div className="flex justify-between items-start mb-4">
+                                <span className={`text-[10px] font-mono uppercase tracking-widest px-2 py-1 rounded border font-semibold ${isFeatured ? 'text-yellow-700 dark:text-yellow-400 border-yellow-500/30 bg-yellow-500/10' : 'text-blue-700 dark:text-blue-400 border-blue-500/20 bg-blue-500/5'}`}>
+                                    {category}
+                                </span>
+                                {link && <a href={link} target="_blank" className="text-slate-400 dark:text-gray-500 group-hover:text-slate-800 dark:group-hover:text-white transition-colors"><ExternalLink size={16} /></a>}
+                            </div>
+                            <h3 className={`text-2xl md:text-3xl font-display font-bold mb-3 transition-colors ${isFeatured ? 'text-slate-900 dark:text-white group-hover:text-yellow-700 dark:group-hover:text-yellow-200' : 'text-slate-900 dark:text-white group-hover:text-blue-700 dark:group-hover:text-blue-200'}`}>{title}</h3>
+                            <p className="text-slate-600 dark:text-gray-400 text-sm leading-relaxed mb-6 font-medium">
+                                {description}
                             </p>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                            {data.map((p, i) => <ProjectCard key={i} project={p} index={i} />)}
-                        </div>
-                    </div>
-                </section>
-            );
-        };
-
-        const Experience = () => {
-            const ref = useRef(null);
-            
-            const { scrollYProgress } = useScroll({
-                target: ref,
-                offset: ["start end", "end center"]
-            });
-            const scaleY = useSpring(scrollYProgress, { stiffness: 100, damping: 30 });
-
-            return (
-                <section id="logs" ref={ref} className="py-20 md:py-32 px-6 bg-slate-900/20 border-y border-white/5 relative overflow-hidden z-10">
-                    <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 md:gap-20">
                         <div>
-                            <h3 className="text-2xl font-bold text-white mb-12 flex items-center gap-3">
-                                <span className="text-purple-400"><Icons.Terminal /></span> SYSTEM_LOGS
-                            </h3>
-                            <div className="relative pl-8 space-y-12">
-                                <div className="absolute left-[3px] top-2 bottom-0 w-[2px] bg-slate-800"></div>
-                                <motion.div style={{ scaleY, originY: 0 }} className="absolute left-[3px] top-2 bottom-0 w-[2px] bg-gradient-to-b from-cyan-500 to-purple-500" />
-                                <div className="relative">
-                                    <div className="absolute -left-[37px] top-1.5 h-4 w-4 rounded-full bg-slate-950 border-2 border-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.5)]"></div>
-                                    <h4 className="text-lg md:text-xl font-bold text-white">B.Sc Computer Science</h4>
-                                    <p className="text-cyan-400 mono text-xs mb-3">Rajendra University | 2023 - 2026</p>
-                                    <p className="text-slate-400 text-sm leading-relaxed">CGPA: 8.3/10.0. Top 5% of Department.<br/>Relevant Coursework: DSA, OOP, OS, Database Management.</p>
-                                </div>
-                                <div className="relative">
-                                    <div className="absolute -left-[37px] top-1.5 h-4 w-4 rounded-full bg-slate-950 border-2 border-purple-500"></div>
-                                    <h4 className="text-lg md:text-xl font-bold text-white">Android Developer & Team Lead</h4>
-                                    <p className="text-purple-400 mono text-xs mb-3">F Salon Academy LLP | Jul 2024 - Sep 2024</p>
-                                    <ul className="text-slate-400 text-sm space-y-2 list-disc pl-4 marker:text-purple-500">
-                                        <li>Led 12-member dev team across 6 Agile sprints.</li>
-                                        <li>Delivered 3 stable pre-production builds.</li>
-                                        <li>Rated "Outstanding" by management.</li>
-                                    </ul>
-                                </div>
-                                <div className="relative">
-                                    <div className="absolute -left-[37px] top-1.5 h-4 w-4 rounded-full bg-slate-950 border-2 border-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.3)]"></div>
-                                    <h4 className="text-lg md:text-xl font-bold text-white">Cert. Fintech & Insurtech</h4>
-                                    <p className="text-slate-400 mono text-xs mb-3">NUS-AIDF | 2026</p>
-                                    <p className="text-slate-400 text-sm">Focus: Blockchain Innovation, AI in Finance, Digital Payments.</p>
-                                </div>
+                            <div className={`w-full h-[1px] mb-4 transition-colors ${isFeatured ? 'bg-yellow-500/20 group-hover:bg-yellow-500/50' : 'bg-slate-300 dark:bg-white/10 group-hover:bg-blue-500/30'}`}></div>
+                            <div className="flex flex-wrap gap-2">
+                                {stack.map((tech, i) => (
+                                    <span key={i} className={`text-xs font-mono font-semibold ${isFeatured ? 'text-yellow-700 dark:text-yellow-500/70' : 'text-slate-500 dark:text-gray-500'}`}>#{tech}</span>
+                                ))}
                             </div>
                         </div>
-                        <div id="stack">
-                            <h3 className="text-2xl font-bold text-white mb-12 flex items-center gap-3">
-                                <span className="text-cyan-400"><Icons.Terminal /></span> TECHNICAL_ARSENAL
-                            </h3>
-                            <div className="space-y-6">
-                                <TiltCard className="p-6 md:p-8">
-                                    <h4 className="text-xs mono text-slate-500 uppercase mb-6 tracking-widest">Core Languages</h4>
-                                    <div className="flex flex-wrap gap-3">
-                                        {['Java', 'Kotlin', 'C++', 'Python', 'JavaScript', 'SQL', 'R'].map(s => (
-                                            <span key={s} className="px-3 py-1.5 md:px-4 md:py-2 bg-slate-950 border border-slate-800 text-slate-200 text-xs md:text-sm rounded hover:border-cyan-500 hover:text-cyan-400 transition-all cursor-default shadow-sm">{s}</span>
-                                        ))}
-                                    </div>
-                                </TiltCard>
-                                <TiltCard className="p-6 md:p-8">
-                                    <h4 className="text-xs mono text-slate-500 uppercase mb-6 tracking-widest">Frameworks & Tools</h4>
-                                    <div className="flex flex-wrap gap-3">
-                                        {['React.js', 'Jetpack Compose', 'Tailwind', 'Firebase', 'Android SDK', 'Git', 'Figma', 'Postman'].map(s => (
-                                            <span key={s} className="px-3 py-1.5 md:px-4 md:py-2 bg-slate-950 border border-slate-800 text-slate-200 text-xs md:text-sm rounded hover:border-purple-500 hover:text-purple-400 transition-all cursor-default shadow-sm">{s}</span>
-                                        ))}
-                                    </div>
-                                </TiltCard>
+                    </div>
+                </motion.div>
+            );
+        };
+
+        const ProjectsSection = () => {
+            return (
+                <section id="projects" className="py-24 pl-4 md:pl-28 pr-4">
+                    <div className="max-w-7xl mx-auto">
+                        <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
+                            <div>
+                                <h2 className="text-4xl md:text-6xl font-display font-bold dark:text-white text-slate-900 mb-2">
+                                    MISSION <span className="text-slate-500 dark:text-gray-700">LOGS</span>
+                                </h2>
+                                <p className="text-slate-500 dark:text-gray-500 font-mono text-sm max-w-md">
+                                    // DEPLOYED ARCHITECTURE 2024-2026 <br/>
+                                    // STATUS: SCALABLE & AWARD-WINNING
+                                </p>
                             </div>
+                            <div className="h-[1px] flex-grow bg-slate-300 dark:bg-gray-800 mx-8 hidden md:block"></div>
+                            <div className="text-right">
+                                <span className="text-5xl font-display font-bold text-slate-300 dark:text-gray-800">04</span>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                             {/* FEATURED: Settle X */}
+                            <ProjectCard 
+                                title="SETTLE X"
+                                category="Fintech / RegTech"
+                                description="Treasury-as-a-Service architecture decoupling settlement from compliance. Reduced settlement time T+5 → T+1 and costs by 90% via wholesale arbitrage. Capstone Finalist."
+                                stack={['Python', 'React', 'PostgreSQL', 'Docker', 'AI']}
+                                isLarge={true}
+                                isFeatured={true}
+                                link="#"
+                            />
+                            {/* FEATURED: Bazaar Odisha */}
+                            <ProjectCard 
+                                title="BAZAAR ODISHA"
+                                category="Govt Innovation / E-Com"
+                                description="Statewide e-commerce directory connecting 68k+ MSMEs. Award-winning low-bandwidth architecture securing ₹1L funding."
+                                stack={['React', 'Firebase', 'Tailwind', 'Multilingual']}
+                                isFeatured={true}
+                                link="#"
+                            />
+                            <ProjectCard 
+                                title="HERITAGE YATRI"
+                                category="Tourism / AI"
+                                description="AI-driven tourism prototype featuring 'Yatri Buddy' assistant for itinerary planning. Offline-first architecture for rural accessibility."
+                                stack={['AI Integration', 'React', 'Offline-First']}
+                                link="#"
+                            />
+                            <ProjectCard 
+                                title="NEXUS ATTENDANCE"
+                                category="Geo-Security"
+                                description="Advanced location-based attendance system using Google Maps API. 95% geofence accuracy with anti-spoofing logic."
+                                stack={['Kotlin', 'Google Maps API', 'Firebase']}
+                                link="https://github.com/Aakash-Khamari"
+                            />
+                            <ProjectCard 
+                                title="PORTFOLIO V1"
+                                category="Design System"
+                                description="Previous iteration of personal branding site focusing on minimalism."
+                                stack={['HTML', 'SCSS', 'JS']}
+                                link="#"
+                            />
                         </div>
                     </div>
                 </section>
             );
         };
 
-        const Footer = () => {
-            const emailLink = "https://mail.google.com/mail/?view=cm&fs=1&to=aakashkhamarilv@gmail.com";
-            
+        const CertificationBadge = () => {
+             return (
+                <div className="relative group interactive cursor-pointer">
+                    <div className="absolute inset-0 bg-yellow-500 blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
+                    <div className="glass-panel-gold p-8 rounded-2xl relative border border-yellow-500/30 overflow-hidden">
+                        <div className="absolute top-0 right-0 p-4 opacity-50"><Award size={40} className="text-yellow-500" /></div>
+                        
+                        <div className="flex flex-col gap-4 relative z-10">
+                            <span className="text-yellow-600 dark:text-yellow-500 font-mono text-xs tracking-[0.2em] uppercase border-b border-yellow-500/30 pb-2 w-fit font-bold">
+                                Prestigious Fellowship
+                            </span>
+                            <h3 className="text-3xl md:text-4xl font-display font-bold text-slate-900 dark:text-white leading-tight">
+                                NUS-AIDF <br/>
+                                <span className="text-yellow-600 dark:text-yellow-400 text-glow-gold">FINTECH FELLOW</span>
+                            </h3>
+                            <p className="text-slate-700 dark:text-gray-300 text-sm max-w-lg leading-relaxed font-medium">
+                                Selected as a Top 10 Capstone Finalist (Team Finverse) from 300+ candidates for the Certificate in Fintech and Insurtech (CFI).
+                                Specializing in <span className="text-slate-900 dark:text-white font-bold">Blockchain, AI in Finance, and RegTech</span>.
+                            </p>
+                            <div className="flex gap-2 mt-2">
+                                <span className="px-2 py-1 bg-yellow-500/10 border border-yellow-500/20 rounded text-[10px] text-yellow-700 dark:text-yellow-300 font-mono font-bold">BLOCKCHAIN</span>
+                                <span className="px-2 py-1 bg-yellow-500/10 border border-yellow-500/20 rounded text-[10px] text-yellow-700 dark:text-yellow-300 font-mono font-bold">PAYMENTS</span>
+                                <span className="px-2 py-1 bg-yellow-500/10 border border-yellow-500/20 rounded text-[10px] text-yellow-700 dark:text-yellow-300 font-mono font-bold">REGTECH</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+             )
+        }
+
+        const TechModule = ({ name, level, category }) => {
             return (
-                <footer className="py-12 border-t border-white/5 bg-black text-center relative z-[100]">
-                    <div className="mb-8">
-                        <h2 className="text-2xl font-bold text-white mb-2">Ready to Collaborate?</h2>
-                        <a href={emailLink} target="_blank" rel="noopener noreferrer" className="text-3xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-slate-200 to-slate-500 hover:to-cyan-400 transition-all cursor-pointer break-all md:break-normal px-4">
-                            aakashkhamarilv@gmail.com
-                        </a>
+                <div className="glass-panel p-4 rounded-lg flex items-center justify-between group hover:border-purple-500/30 transition-colors interactive">
+                    <div className="flex items-center gap-3">
+                        <div className={`w-2 h-2 rounded-full ${category === 'lang' ? 'bg-blue-500' : 'bg-purple-500'}`}></div>
+                        <span className="font-mono text-sm font-bold text-slate-700 dark:text-gray-300 group-hover:text-black dark:group-hover:text-white">{name}</span>
                     </div>
-                    <div className="flex justify-center gap-8 mb-8 text-sm font-bold text-white">
-                        <a href="https://linkedin.com/in/aakash-khamari" className="hover:text-cyan-400 transition-colors uppercase tracking-widest">LinkedIn</a>
-                        <a href="https://github.com/Aakash-Khamari" className="hover:text-cyan-400 transition-colors uppercase tracking-widest">GitHub</a>
+                    <div className="flex gap-1">
+                        {[...Array(5)].map((_, i) => (
+                            <div key={i} className={`w-1 h-4 rounded-sm transition-all duration-300 ${i < level ? (category === 'lang' ? 'bg-blue-500/50 group-hover:bg-blue-400' : 'bg-purple-500/50 group-hover:bg-purple-400') : 'bg-slate-300 dark:bg-gray-800'}`}></div>
+                        ))}
                     </div>
-                    <p className="text-slate-600 text-xs mono">
-                        DESIGNED & BUILT BY AAKASH KHAMARI <br/>
-                        © 2026 ALL RIGHTS RESERVED
-                    </p>
-                </footer>
+                </div>
             );
+        };
+
+        const StackSection = () => {
+            return (
+                <section id="stack" className="py-24 pl-4 md:pl-28 pr-4 bg-gradient-to-b from-transparent to-blue-900/5">
+                    <div className="max-w-6xl mx-auto">
+                        <div className="mb-16">
+                            <div className="flex items-center gap-3 mb-4">
+                                <Cpu className="text-blue-600 dark:text-blue-500" />
+                                <span className="font-mono text-blue-600 dark:text-blue-500 text-xs tracking-widest uppercase font-bold">System Specifications</span>
+                            </div>
+                            <h2 className="text-4xl md:text-5xl font-display font-bold text-slate-900 dark:text-white">
+                                CORE INFRASTRUCTURE
+                            </h2>
+                        </div>
+
+                        {/* HIGH PRIORITY CERTIFICATION */}
+                        <div className="mb-16">
+                            <CertificationBadge />
+                        </div>
+
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                            <div>
+                                <h3 className="text-sm font-mono text-slate-500 dark:text-gray-500 mb-6 uppercase tracking-widest border-b border-slate-300 dark:border-gray-800 pb-2 font-bold">Languages & Runtime</h3>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <TechModule name="JavaScript (ES6+)" level={5} category="lang" />
+                                    <TechModule name="TypeScript" level={4} category="lang" />
+                                    <TechModule name="Python" level={4} category="lang" />
+                                    <TechModule name="Java / Kotlin" level={5} category="lang" />
+                                    <TechModule name="C++" level={3} category="lang" />
+                                    <TechModule name="SQL" level={4} category="lang" />
+                                </div>
+                            </div>
+                            <div>
+                                <h3 className="text-sm font-mono text-slate-500 dark:text-gray-500 mb-6 uppercase tracking-widest border-b border-slate-300 dark:border-gray-800 pb-2 font-bold">Frameworks & Tools</h3>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <TechModule name="React.js" level={5} category="frame" />
+                                    <TechModule name="Next.js" level={4} category="frame" />
+                                    <TechModule name="Tailwind CSS" level={5} category="frame" />
+                                    <TechModule name="Docker" level={3} category="frame" />
+                                    <TechModule name="Firebase" level={4} category="frame" />
+                                    <TechModule name="Google Maps API" level={4} category="frame" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="mt-20">
+                             <h3 className="text-sm font-mono text-slate-500 dark:text-gray-500 mb-8 uppercase tracking-widest border-b border-slate-300 dark:border-gray-800 pb-2 font-bold">Execution Logs</h3>
+                             <div className="space-y-6">
+                                <div className="glass-panel p-6 rounded-xl border-l-4 border-l-yellow-500">
+                                    <div className="flex flex-col md:flex-row md:items-center justify-between mb-2">
+                                        <h4 className="text-xl font-bold text-slate-900 dark:text-white">NUS-AIDF Fintech Fellow</h4>
+                                        <span className="font-mono text-xs text-yellow-600 dark:text-yellow-500 font-bold">2026 // NATIONAL UNIVERSITY OF SINGAPORE</span>
+                                    </div>
+                                    <p className="text-slate-600 dark:text-gray-400 text-sm font-medium">Top 10 Finalist (Capstone). Focus: Blockchain & RegTech.</p>
+                                </div>
+                                <div className="glass-panel p-6 rounded-xl border-l-4 border-l-purple-500">
+                                    <div className="flex flex-col md:flex-row md:items-center justify-between mb-2">
+                                        <h4 className="text-xl font-bold text-slate-900 dark:text-white">Android Team Lead</h4>
+                                        <span className="font-mono text-xs text-purple-600 dark:text-purple-400 font-bold">JUL 2024 - SEP 2024 // F SALON ACADEMY</span>
+                                    </div>
+                                    <p className="text-slate-600 dark:text-gray-400 text-sm font-medium">Led 12-member dev team across 6 Agile sprints. Rated "Outstanding".</p>
+                                </div>
+                                <div className="glass-panel p-6 rounded-xl border-l-4 border-l-blue-500">
+                                    <div className="flex flex-col md:flex-row md:items-center justify-between mb-2">
+                                        <h4 className="text-xl font-bold text-slate-900 dark:text-white">B.Sc Computer Science</h4>
+                                        <span className="font-mono text-xs text-blue-600 dark:text-blue-400 font-bold">2023 - 2026 // RAJENDRA UNIVERSITY</span>
+                                    </div>
+                                    <p className="text-slate-600 dark:text-gray-400 text-sm font-medium">CGPA: 8.3/10.0. Top 5% of Department.</p>
+                                </div>
+                             </div>
+                        </div>
+                    </div>
+                </section>
+            );
+        };
+
+        const ContactSection = () => {
+            const [contactStatus, setContactStatus] = useState('idle'); // idle, establishing, connected, redirecting
+
+            const handleContact = () => {
+                if (contactStatus !== 'idle') return;
+
+                // Phase 1: Establishing
+                setContactStatus('establishing');
+                
+                setTimeout(() => {
+                    // Phase 2: Connected
+                    setContactStatus('connected');
+                    
+                    setTimeout(() => {
+                        // Phase 3: Redirecting
+                        setContactStatus('redirecting');
+                        
+                        // Force open Gmail Compose window
+                        const gmailUrl = "https://mail.google.com/mail/?view=cm&fs=1&to=aakashkhamarilv@gmail.com";
+                        window.open(gmailUrl, '_blank');
+                        
+                        // Fallback to mailto for non-Gmail users as a backup
+                        const link = document.createElement('a');
+                        link.href = "mailto:aakashkhamarilv@gmail.com";
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        
+                        // Reset after redirect
+                        setTimeout(() => {
+                            setContactStatus('idle');
+                        }, 2000);
+                    }, 1000); // Reduced wait time slightly
+                }, 1500); // Reduced wait time slightly
+            };
+
+            const handleDirectEmail = () => {
+                 const gmailUrl = "https://mail.google.com/mail/?view=cm&fs=1&to=aakashkhamarilv@gmail.com";
+                 window.open(gmailUrl, '_blank');
+            };
+
+            return (
+                <section id="contact" className="py-24 pl-4 md:pl-28 pr-4 min-h-[50vh] flex flex-col justify-center">
+                    <div className="max-w-4xl mx-auto w-full text-center">
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            whileInView={{ scale: 1, opacity: 1 }}
+                            transition={{ duration: 0.5 }}
+                            className="glass-panel p-12 rounded-3xl relative overflow-hidden"
+                        >
+                            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-blue-600/10 via-purple-600/10 to-transparent blur-3xl pointer-events-none"></div>
+                            <h2 className="text-3xl md:text-5xl font-display font-bold text-slate-900 dark:text-white mb-6 relative z-10">
+                                INITIALIZE PROTOCOL: <span className="text-blue-600 dark:text-blue-400">HIRE</span>
+                            </h2>
+                            <p className="text-slate-600 dark:text-gray-400 mb-8 max-w-xl mx-auto relative z-10 font-medium">
+                                Currently accepting new contracts and full-time opportunities for 2026. 
+                                Secure communication channel is open.
+                            </p>
+                            
+                            <MagneticButton 
+                                onClick={handleContact} 
+                                disabled={contactStatus !== 'idle'}
+                                className="inline-flex items-center justify-center gap-3 px-8 py-4 bg-slate-900 dark:bg-white text-white dark:text-black font-bold tracking-wide w-full sm:w-auto min-w-[200px] shadow-[0_0_20px_rgba(255,255,255,0.4)]"
+                            >
+                                {contactStatus === 'idle' && (
+                                    <>
+                                        <Mail size={20} />
+                                        TRANSMIT MESSAGE
+                                    </>
+                                )}
+                                
+                                {contactStatus === 'establishing' && (
+                                    <div className="flex items-center gap-3">
+                                        <Wifi size={20} className="animate-pulse" />
+                                        <span>ESTABLISHING UPLINK...</span>
+                                    </div>
+                                )}
+                                
+                                {contactStatus === 'connected' && (
+                                    <div className="flex items-center gap-3 text-green-400 dark:text-green-700">
+                                        <Check size={20} />
+                                        <span>UPLINK ESTABLISHED</span>
+                                    </div>
+                                )}
+
+                                {contactStatus === 'redirecting' && (
+                                    <div className="flex items-center gap-3">
+                                        <Zap size={20} />
+                                        <span>REDIRECTING...</span>
+                                    </div>
+                                )}
+                            </MagneticButton>
+
+                            {/* Progress Bar for Animation */}
+                            <AnimatePresence>
+                                {contactStatus === 'establishing' && (
+                                    <motion.div 
+                                        initial={{ width: "0%" }}
+                                        animate={{ width: "100%" }}
+                                        transition={{ duration: 1.5, ease: "linear" }}
+                                        className="h-1 bg-blue-500 absolute bottom-0 left-0"
+                                    />
+                                )}
+                            </AnimatePresence>
+
+                            <div className="mt-12 flex justify-center gap-8 text-sm font-mono text-slate-500 dark:text-gray-500 relative z-10">
+                                <a href="https://linkedin.com/in/aakash-khamari" target="_blank" className="hover:text-black dark:hover:text-white transition-colors">LINKEDIN</a>
+                                <a href="https://github.com/Aakash-Khamari" target="_blank" className="hover:text-black dark:hover:text-white transition-colors">GITHUB</a>
+                                <button onClick={handleDirectEmail} className="hover:text-black dark:hover:text-white transition-colors uppercase">EMAIL</button>
+                            </div>
+                        </motion.div>
+                        <footer className="mt-12 text-center text-xs text-slate-500 dark:text-gray-700 font-mono">
+                            <p>DESIGNED & ENGINEERED BY AAKASH KHAMARI</p>
+                            <p className="mt-2 opacity-50">SYSTEM VERSION 3.1 // ODISHA, IN</p>
+                        </footer>
+                    </div>
+
+                    <AnimatePresence>
+                        {contactStatus === 'connected' && (
+                            <motion.div 
+                                initial={{ opacity: 0, y: 50 }} 
+                                animate={{ opacity: 1, y: 0 }} 
+                                exit={{ opacity: 0, y: 50 }}
+                                className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 px-6 py-3 glass-panel border border-green-500/50 rounded-full text-green-600 dark:text-green-400 font-mono text-xs tracking-widest flex items-center gap-2 shadow-[0_0_20px_rgba(34,197,94,0.3)] bg-white/90 dark:bg-black/90"
+                            >
+                                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                                CONNECTION SECURE: LAUNCHING MAIL PROTOCOL
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </section>
+            );
+        };
+
+        const FloatingArcadeTrigger = ({ theme }) => {
+            return (
+                <a 
+                    href="./game.html" 
+                    className="fixed bottom-6 right-6 z-50 group interactive"
+                    title="Enter Arcade Mode"
+                >
+                    <div className="relative">
+                        {/* Pulse Effect */}
+                        <div className={`absolute inset-0 rounded-full blur-md opacity-20 group-hover:opacity-60 transition-opacity duration-300 animate-pulse ${theme === 'dark' ? 'bg-neonPurple' : 'bg-purple-600'}`}></div>
+                        
+                        {/* Main Button */}
+                        <div className={`w-14 h-14 backdrop-blur border rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 shadow-lg ${theme === 'dark' ? 'bg-black/80 border-neonPurple/50 text-neonPurple hover:text-white hover:bg-neonPurple/80' : 'bg-white/90 border-purple-300 text-purple-600 hover:text-white hover:bg-purple-600'}`}>
+                            <Gamepad2 size={28} strokeWidth={1.5} />
+                        </div>
+                        
+                        {/* Tooltip */}
+                        <div className={`absolute right-16 top-1/2 -translate-y-1/2 px-3 py-1 rounded text-xs font-mono font-bold opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-2 group-hover:translate-x-0 whitespace-nowrap pointer-events-none border ${theme === 'dark' ? 'bg-black/90 border-white/10 text-white' : 'bg-white/90 border-slate-200 text-slate-800 shadow-sm'}`}>
+                            INSERT COIN
+                        </div>
+                    </div>
+                </a>
+            );
+        };
+
+        // --- HOOK: useThemeEngine ---
+        // Logic: Interpolates colors between Night, Dawn, and Day based on intensity (0-100)
+        const useThemeEngine = (intensity) => {
+            useEffect(() => {
+                const root = document.body;
+                
+                // Helper to interpolate colors (r,g,b)
+                const interpolate = (start, end, factor) => {
+                    const r = Math.round(start[0] + (end[0] - start[0]) * factor);
+                    const g = Math.round(start[1] + (end[1] - start[1]) * factor);
+                    const b = Math.round(start[2] + (end[2] - start[2]) * factor);
+                    return `rgb(${r}, ${g}, ${b})`;
+                };
+
+                // Helper to interpolate opacity/alpha
+                const interpolateVal = (start, end, factor) => {
+                     return start + (end - start) * factor;
+                };
+
+                // Define Color Stops
+                // 0% = Night (Deep Dark)
+                // 50% = Dawn (Soft Grey/Purple hint)
+                // 100% = Day (Bright White/Blue hint)
+                const STOPS = {
+                    night: { 
+                        bg: [5, 5, 5], 
+                        text: [255, 255, 255], 
+                        textSec: [156, 163, 175], 
+                        glass: [10, 10, 10], 
+                        glassBorder: [255, 255, 255], 
+                        btnBg: [255, 255, 255], 
+                        btnText: [0, 0, 0],
+                        badgeBg: [255, 255, 255], // White
+                        badgeText: [0, 0, 0]      // Black
+                    },
+                    dawn: { 
+                        bg: [40, 44, 52], 
+                        text: [240, 240, 240], 
+                        textSec: [200, 200, 200], 
+                        glass: [60, 60, 65], 
+                        glassBorder: [150, 150, 150], 
+                        btnBg: [200, 200, 220], 
+                        btnText: [30, 30, 40],
+                        badgeBg: [220, 220, 220], 
+                        badgeText: [20, 20, 20]
+                    }, 
+                    day: { 
+                        bg: [240, 244, 248], 
+                        text: [15, 23, 42], 
+                        textSec: [71, 85, 105], 
+                        glass: [255, 255, 255], 
+                        glassBorder: [200, 200, 200], 
+                        btnBg: [15, 23, 42], 
+                        btnText: [255, 255, 255],
+                        badgeBg: [15, 23, 42],    // Dark Blue/Black
+                        badgeText: [255, 255, 255] // White
+                    }
+                };
+
+                let bg, text, textSec, glass, glassBorder, btnBg, btnText, badgeBg, badgeText, glassAlpha, glassBlur, scanlineOpacity;
+
+                if (intensity <= 50) {
+                    // Interpolate Night -> Dawn
+                    const factor = intensity / 50;
+                    bg = interpolate(STOPS.night.bg, STOPS.dawn.bg, factor);
+                    text = interpolate(STOPS.night.text, STOPS.dawn.text, factor);
+                    textSec = interpolate(STOPS.night.textSec, STOPS.dawn.textSec, factor);
+                    glass = interpolate(STOPS.night.glass, STOPS.dawn.glass, factor);
+                    glassBorder = interpolate(STOPS.night.glassBorder, STOPS.dawn.glassBorder, factor);
+                    btnBg = interpolate(STOPS.night.btnBg, STOPS.dawn.btnBg, factor);
+                    btnText = interpolate(STOPS.night.btnText, STOPS.dawn.btnText, factor);
+                    badgeBg = interpolate(STOPS.night.badgeBg, STOPS.dawn.badgeBg, factor);
+                    badgeText = interpolate(STOPS.night.badgeText, STOPS.dawn.badgeText, factor);
+                    
+                    glassAlpha = interpolateVal(0.6, 0.4, factor);
+                    glassBlur = interpolateVal(12, 14, factor);
+                    scanlineOpacity = interpolateVal(0.1, 0.05, factor);
+                } else {
+                    // Interpolate Dawn -> Day
+                    const factor = (intensity - 50) / 50;
+                    bg = interpolate(STOPS.dawn.bg, STOPS.day.bg, factor);
+                    text = interpolate(STOPS.dawn.text, STOPS.day.text, factor);
+                    textSec = interpolate(STOPS.dawn.textSec, STOPS.day.textSec, factor);
+                    glass = interpolate(STOPS.dawn.glass, STOPS.day.glass, factor);
+                    glassBorder = interpolate(STOPS.dawn.glassBorder, STOPS.day.glassBorder, factor);
+                    btnBg = interpolate(STOPS.dawn.btnBg, STOPS.day.btnBg, factor);
+                    btnText = interpolate(STOPS.dawn.btnText, STOPS.day.btnText, factor);
+                    badgeBg = interpolate(STOPS.dawn.badgeBg, STOPS.day.badgeBg, factor);
+                    badgeText = interpolate(STOPS.dawn.badgeText, STOPS.day.badgeText, factor);
+
+                    glassAlpha = interpolateVal(0.4, 0.85, factor);
+                    glassBlur = interpolateVal(14, 16, factor);
+                    scanlineOpacity = interpolateVal(0.05, 0.03, factor);
+                }
+
+                // Apply CSS Variables
+                root.style.setProperty('--bg-primary', bg);
+                root.style.setProperty('--text-primary', text);
+                root.style.setProperty('--text-secondary', textSec);
+                root.style.setProperty('--glass-bg', `rgba(${glass.match(/\d+/g).join(',')}, ${glassAlpha})`);
+                root.style.setProperty('--glass-border', `rgba(${glassBorder.match(/\d+/g).join(',')}, 0.2)`);
+                root.style.setProperty('--glass-blur', `${glassBlur}px`);
+                root.style.setProperty('--btn-bg', btnBg);
+                root.style.setProperty('--btn-text', btnText);
+                root.style.setProperty('--badge-bg', badgeBg);
+                root.style.setProperty('--badge-text', badgeText);
+                root.style.setProperty('--scanline-opacity', scanlineOpacity);
+                
+                // Add class to body to trigger overrides
+                root.classList.add('dynamic-active');
+
+            }, [intensity]);
         };
 
         const App = () => {
+            const [activeSection, setActiveSection] = useState('home');
+            // 'theme' state is kept for backward compatibility with existing components that rely on it (like WarpBackground)
+            // But visually, the intensity slider overrides it via CSS variables.
+            const [theme, setTheme] = useState('dark');
             const [showTerminal, setShowTerminal] = useState(false);
+            
+            // --- NEW STATE ---
+            const [sliderVisible, setSliderVisible] = useState(false);
+            const [intensity, setIntensity] = useState(0); // 0 = Dark, 100 = Light
+
+            // Initialize theme from system preference
+            useEffect(() => {
+                const systemPref = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                setTheme(systemPref);
+                // Initialize intensity based on theme
+                setIntensity(systemPref === 'dark' ? 0 : 100);
+
+                if (systemPref === 'dark') {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                    document.documentElement.classList.add('light-mode');
+                }
+            }, []);
+
+            // Activate the theme engine
+            useThemeEngine(intensity);
+
+            // Sync binary theme state with intensity for backward compatibility
+            useEffect(() => {
+                if (intensity > 60 && theme === 'dark') {
+                    setTheme('light');
+                    document.documentElement.classList.remove('dark');
+                    document.documentElement.classList.add('light-mode');
+                } else if (intensity <= 60 && theme === 'light') {
+                    setTheme('dark');
+                    document.documentElement.classList.add('dark');
+                    document.documentElement.classList.remove('light-mode');
+                }
+            }, [intensity]);
+
+            const toggleSlider = () => {
+                setSliderVisible(!sliderVisible);
+            };
+
+            useEffect(() => {
+                const handleScroll = () => {
+                    const sections = ['home', 'projects', 'stack', 'contact']; 
+                    const current = sections.find(section => {
+                        const element = document.getElementById(section);
+                        if (element) {
+                            const rect = element.getBoundingClientRect();
+                            return rect.top >= -100 && rect.top <= window.innerHeight / 2;
+                        }
+                        return false;
+                    });
+                    if (current) setActiveSection(current);
+                };
+                window.addEventListener('scroll', handleScroll);
+                return () => window.removeEventListener('scroll', handleScroll);
+            }, []);
 
             return (
-                <div className="relative">
-                    <div className="noise-bg"></div>
-                    <div className="fixed inset-0 z-50 pointer-events-none border-[8px] md:border-[12px] border-transparent md:border-white/[0.02]"></div>
-                    <CustomCursor />
+                <main className={`relative min-h-screen selection:bg-blue-500/30 transition-colors duration-500 ${theme === 'dark' ? 'bg-obsidian text-white' : 'bg-paper text-slate-900 light-bg-grid'}`}>
+                    <WarpBackground theme={theme} />
+                    <AdvancedCursor />
                     <MatrixRain />
-                    <ParticleBackground />
-                    <LevelBadge />
-                    <Navbar onOpenTerminal={() => setShowTerminal(true)} />
+                    
+                    <NavDock 
+                        activeSection={activeSection} 
+                        theme={theme} 
+                        onOpenTerminal={() => setShowTerminal(true)}
+                    />
+                    
+                    {/* MODIFIED: Passed new props to ThemeSwitch and added Controller */}
+                    <ThemeSwitch 
+                        theme={theme} 
+                        toggleSlider={toggleSlider} 
+                        sliderVisible={sliderVisible}
+                    />
+                    <ThemeIntensityController 
+                        intensity={intensity} 
+                        setIntensity={setIntensity} 
+                        isVisible={sliderVisible} 
+                    />
+                    
+                    <StatusHUD />
+                    <FloatingArcadeTrigger theme={theme} />
+                    
                     <AnimatePresence>
-                        {showTerminal && <Terminal onClose={() => setShowTerminal(false)} />}
+                        {showTerminal && <TerminalModal onClose={() => setShowTerminal(false)} />}
                     </AnimatePresence>
-                    <main className="relative z-10">
-                        <Hero />
-                        <Projects />
-                        <Experience />
-                    </main>
-                    <Footer />
-                </div>
+
+                    <div className="relative z-10">
+                        <HeroSection />
+                        <ProjectsSection />
+                        <StackSection />
+                        <ContactSection />
+                    </div>
+                </main>
             );
         };
 

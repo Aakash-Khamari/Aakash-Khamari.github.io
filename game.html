@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arcade // Aakash Khamari</title>
+    
+    <!-- Core Libraries - Guaranteed Load Order -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/framer-motion@10.16.4/dist/framer-motion.js"></script>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Rajdhani:wght@500;600;700;800&family=Press+Start+2P&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        mono: ['JetBrains Mono', 'monospace'],
+                        display: ['Rajdhani', 'sans-serif'],
+                        pixel: ['"Press Start 2P"', 'cursive'],
+                    },
+                    colors: {
+                        neonBlue: '#3b82f6',
+                        neonPurple: '#a855f7',
+                        neonGreen: '#22c55e',
+                        neonRed: '#ef4444',
+                        neonYellow: '#eab308',
+                        obsidian: '#050505',
+                        glass: 'rgba(255, 255, 255, 0.05)',
+                    },
+                    animation: {
+                        'pulse-fast': 'pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body { 
+            background-color: #050505; 
+            color: white; 
+            overflow-x: hidden; 
+            overflow-y: auto; 
+            cursor: default; 
+        }
+        
+        /* CRT Effect Overlay */
+        .crt-scanline {
+            width: 100%; height: 100%; z-index: 50; position: fixed; left: 0; top: 0; pointer-events: none;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            background-size: 100% 3px, 4px 100%;
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #050505; }
+        ::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #60a5fa; }
+
+        .game-canvas {
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 30px rgba(59, 130, 246, 0.15);
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useCallback } = React;
+        const { motion, AnimatePresence } = window.Motion;
+
+        // --- ICONS (Inline SVG to prevent loading errors) ---
+        const Icons = {
+            Back: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>,
+            Hex: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M12 2l8.5 5v10L12 22l-8.5-5V7L12 2z"/></svg>,
+            Gravity: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M16 12l-4 4-4-4"/><rect x="12" y="8" width="0.01" height="0.01"/></svg>,
+            Cards: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><rect width="16" height="20" x="4" y="2" rx="2"/><path d="M12 14h.01"/></svg>,
+            Shooter: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M12 2l4 20-4-4-4 4 4-20z"/></svg>,
+            Time: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/><path d="M22 12h-4"/><path d="M6 12H2"/></svg>,
+            Home: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
+            Trophy: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>,
+            Lock: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>,
+            Play: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        };
+
+        // --- ACHIEVEMENT DATA ---
+        const ACHIEVEMENTS = {
+            'iron_tactician': { id: 'iron_tactician', title: 'Iron Tactician', desc: 'Win a battle in Iron Hex.', icon: Icons.Hex },
+            'gravity_master': { id: 'gravity_master', title: 'Gravity Master', desc: 'Complete the Graviton chamber.', icon: Icons.Gravity },
+            'void_walker': { id: 'void_walker', title: 'Void Walker', desc: 'Defeat the Void Beast.', icon: Icons.Cards },
+            'neon_survivor': { id: 'neon_survivor', title: 'Neon Survivor', desc: 'Score 1000+ in Neon Swarm.', icon: Icons.Shooter },
+            'time_traveler': { id: 'time_traveler', title: 'Time Traveler', desc: 'Complete a loop in Echoes.', icon: Icons.Time },
+        };
+
+        // --- GAME 1: IRON HEX (Tactical Strategy) ---
+        const IronHex = ({ onBack, unlockAchievement }) => {
+            const [grid, setGrid] = useState([]);
+            const [selectedUnit, setSelectedUnit] = useState(null);
+            const [turn, setTurn] = useState('player'); 
+            const [log, setLog] = useState(['Mission Start: Command Units']);
+            const [winner, setWinner] = useState(null);
+
+            useEffect(() => {
+                const newGrid = [];
+                for(let r = 0; r < 5; r++) {
+                    for(let q = 0; q < 5; q++) {
+                        newGrid.push({ id: `${r}-${q}`, r, q, unit: null });
+                    }
+                }
+                newGrid[0].unit = { type: 'mech', hp: 15, team: 'player', icon: '🤖' };
+                newGrid[24].unit = { type: 'tank', hp: 15, team: 'enemy', icon: '🦂' };
+                setGrid(newGrid);
+            }, []);
+
+            const handleTileClick = (index) => {
+                if (turn !== 'player' || winner) return;
+                const tile = grid[index];
+
+                if (selectedUnit === null && tile.unit?.team === 'player') {
+                    setSelectedUnit(index);
+                    setLog(prev => [`Selected Unit at [${tile.r},${tile.q}]`, ...prev]);
+                } else if (selectedUnit !== null) {
+                    const origin = grid[selectedUnit];
+                    const dist = Math.abs(origin.r - tile.r) + Math.abs(origin.q - tile.q); 
+                    
+                    if (dist > 1 && !tile.unit) {
+                        setLog(prev => [`Too far! Range is 1 tile.`, ...prev]);
+                        return;
+                    }
+
+                    if (!tile.unit) {
+                        // Move
+                        const newGrid = [...grid];
+                        newGrid[index].unit = newGrid[selectedUnit].unit;
+                        newGrid[selectedUnit].unit = null;
+                        setGrid(newGrid);
+                        setSelectedUnit(null);
+                        setLog(prev => [`Moved to [${tile.r},${tile.q}]`, ...prev]);
+                        setTurn('enemy');
+                    } else if (tile.unit.team === 'enemy') {
+                        // Attack
+                        const newGrid = [...grid];
+                        const dmg = Math.floor(Math.random() * 4) + 2;
+                        newGrid[index].unit.hp -= dmg;
+                        setLog(prev => [`Attacked Enemy! Dealt ${dmg} DMG.`, ...prev]);
+                        
+                        if(newGrid[index].unit.hp <= 0) {
+                            newGrid[index].unit = null;
+                            setLog(prev => [`Enemy Destroyed! Victory!`, ...prev]);
+                            setWinner('player');
+                            unlockAchievement('iron_tactician');
+                        } else {
+                            setTurn('enemy');
+                        }
+                        setGrid(newGrid);
+                        setSelectedUnit(null);
+                    }
+                }
+            };
+
+            // AI Turn
+            useEffect(() => {
+                if (turn === 'enemy' && !winner) {
+                    setTimeout(() => {
+                        const enemyIndex = grid.findIndex(t => t.unit?.team === 'enemy');
+                        const playerIndex = grid.findIndex(t => t.unit?.team === 'player');
+                        
+                        if (enemyIndex === -1) return; 
+                        if (playerIndex === -1) { setWinner('enemy'); return; }
+
+                        const newGrid = [...grid];
+                        // Simple AI: Heal if not attacked (placeholder for complex logic)
+                        newGrid[enemyIndex].unit.hp = Math.min(15, newGrid[enemyIndex].unit.hp + 1);
+                        setLog(prev => [`Enemy repairing... (+1 HP)`, ...prev]);
+                        
+                        setGrid(newGrid);
+                        setTurn('player');
+                    }, 1000);
+                }
+            }, [turn, winner, grid]);
+
+            return (
+                <div className="flex flex-col items-center justify-center h-full relative p-8">
+                    <button onClick={onBack} className="absolute top-4 left-4 flex items-center gap-2 text-gray-400 hover:text-white font-mono z-50"><Icons.Back/> EXIT</button>
+                    <h2 className="text-4xl font-display font-bold text-neonYellow mb-4">IRON HEX: DOMINION</h2>
+                    
+                    <div className="flex flex-col md:flex-row gap-8 items-start">
+                        <div className="bg-gray-900 border border-gray-700 p-4 rounded-lg relative">
+                            {winner && (
+                                <div className="absolute inset-0 bg-black/80 flex items-center justify-center z-20">
+                                    <div className={`text-4xl font-bold ${winner === 'player' ? 'text-neonGreen' : 'text-neonRed'}`}>
+                                        {winner === 'player' ? 'VICTORY' : 'DEFEAT'}
+                                    </div>
+                                </div>
+                            )}
+                            <div className="grid grid-cols-5 gap-2">
+                                {grid.map((tile, i) => (
+                                    <div 
+                                        key={i}
+                                        onClick={() => handleTileClick(i)}
+                                        className={`w-12 h-12 md:w-16 md:h-16 border flex items-center justify-center cursor-pointer transition-colors relative
+                                            ${selectedUnit === i ? 'border-neonYellow bg-yellow-900/30' : 'border-gray-700 bg-gray-800'}
+                                            ${tile.unit?.team === 'player' ? 'text-neonBlue' : 'text-neonRed'}
+                                        `}
+                                    >
+                                        <span className="text-2xl">{tile.unit?.icon}</span>
+                                        {tile.unit && <div className="absolute bottom-1 text-[9px] font-mono text-white bg-black/50 px-1 rounded">{tile.unit.hp}HP</div>}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="w-full md:w-64 bg-black border border-green-500/30 p-4 font-mono text-xs text-green-400 h-64 overflow-y-auto rounded">
+                            {log.map((l, i) => <div key={i} className="mb-1 border-b border-green-900/30 pb-1">> {l}</div>)}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- GAME 2: GRAVITON LOCK (Physics) ---
+        const GravitonLock = ({ onBack, unlockAchievement }) => {
+            const canvasRef = useRef(null);
+            const [gravity, setGravity] = useState({ x: 0, y: 0.5 });
+            const [status, setStatus] = useState('playing'); 
+            
+            const playerRef = useRef({ x: 50, y: 50, vx: 0, vy: 0, size: 20 });
+            const goalRef = useRef({ x: 500, y: 300, size: 40 });
+            const wallsRef = useRef([
+                { x: 200, y: 100, w: 20, h: 200 },
+                { x: 400, y: 200, w: 200, h: 20 },
+            ]);
+
+            useEffect(() => {
+                const canvas = canvasRef.current;
+                const ctx = canvas.getContext('2d');
+                let anim;
+
+                const update = () => {
+                    const p = playerRef.current;
+                    
+                    p.vx += gravity.x * 0.2;
+                    p.vy += gravity.y * 0.2;
+                    p.vx *= 0.99;
+                    p.vy *= 0.99;
+                    p.x += p.vx;
+                    p.y += p.vy;
+
+                    if(p.x < 0) { p.x = 0; p.vx *= -0.5; }
+                    if(p.x > canvas.width - p.size) { p.x = canvas.width - p.size; p.vx *= -0.5; }
+                    if(p.y < 0) { p.y = 0; p.vy *= -0.5; }
+                    if(p.y > canvas.height - p.size) { p.y = canvas.height - p.size; p.vy *= -0.5; }
+
+                    wallsRef.current.forEach(w => {
+                        if (p.x < w.x + w.w && p.x + p.size > w.x &&
+                            p.y < w.y + w.h && p.y + p.size > w.y) {
+                                p.vx *= -0.8;
+                                p.vy *= -0.8;
+                        }
+                    });
+
+                    const g = goalRef.current;
+                    if (p.x < g.x + g.size && p.x + p.size > g.x &&
+                        p.y < g.y + g.size && p.y + p.size > g.y) {
+                            setStatus('won');
+                            unlockAchievement('gravity_master');
+                            return; 
+                    }
+
+                    ctx.fillStyle = '#111';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                    ctx.fillStyle = '#22c55e';
+                    ctx.fillRect(g.x, g.y, g.size, g.size);
+
+                    ctx.fillStyle = '#64748b';
+                    wallsRef.current.forEach(w => ctx.fillRect(w.x, w.y, w.w, w.h));
+
+                    ctx.fillStyle = '#a855f7';
+                    ctx.fillRect(p.x, p.y, p.size, p.size);
+
+                    if (status === 'playing') anim = requestAnimationFrame(update);
+                };
+                
+                anim = requestAnimationFrame(update);
+                return () => cancelAnimationFrame(anim);
+            }, [gravity, status]);
+
+            return (
+                <div className="flex flex-col items-center justify-center h-full relative p-8">
+                    <button onClick={onBack} className="absolute top-4 left-4 flex items-center gap-2 text-gray-400 hover:text-white font-mono"><Icons.Back/> EXIT</button>
+                    <h2 className="text-4xl font-display font-bold text-neonPurple mb-4">GRAVITON LOCK</h2>
+                    
+                    <div className="relative">
+                        <canvas ref={canvasRef} width="600" height="400" className="bg-black border border-gray-700 rounded"></canvas>
+                        <div className="absolute top-4 right-4 flex flex-col gap-1">
+                            <button onClick={() => setGravity({x:0, y:-1})} className="p-2 bg-white/10 hover:bg-white/20 rounded">▲</button>
+                            <div className="flex gap-1">
+                                <button onClick={() => setGravity({x:-1, y:0})} className="p-2 bg-white/10 hover:bg-white/20 rounded">◀</button>
+                                <button onClick={() => setGravity({x:1, y:0})} className="p-2 bg-white/10 hover:bg-white/20 rounded">▶</button>
+                            </div>
+                            <button onClick={() => setGravity({x:0, y:1})} className="p-2 bg-white/10 hover:bg-white/20 rounded">▼</button>
+                        </div>
+                        {status === 'won' && (
+                            <div className="absolute inset-0 bg-black/80 flex items-center justify-center">
+                                <div className="text-3xl text-neonGreen font-bold animate-bounce">CHAMBER UNLOCKED</div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        // --- GAME 3: VOID DECK (Card Battle) ---
+        const VoidDeck = ({ onBack, unlockAchievement }) => {
+            const [playerHp, setPlayerHp] = useState(50);
+            const [enemyHp, setEnemyHp] = useState(100);
+            const [energy, setEnergy] = useState(3);
+            const [log, setLog] = useState("Battle Initialized.");
+            const [won, setWon] = useState(false);
+
+            const cards = [
+                { id: 1, name: 'Datastream Strike', cost: 1, dmg: 10, icon: '⚔️' },
+                { id: 2, name: 'Firewall', cost: 1, heal: 5, icon: '🛡️' },
+                { id: 3, name: 'Kernel Panic', cost: 2, dmg: 25, self: 5, icon: '☢️' }
+            ];
+
+            const playCard = (card) => {
+                if (energy < card.cost || won) return;
+                setEnergy(e => e - card.cost);
+                
+                let msg = `Played ${card.name}.`;
+                if(card.dmg) {
+                    const newHp = Math.max(0, enemyHp - card.dmg);
+                    setEnemyHp(newHp);
+                    msg += ` Dealt ${card.dmg} dmg.`;
+                    if(newHp === 0) {
+                        setWon(true);
+                        unlockAchievement('void_walker');
+                        setLog("TARGET ELIMINATED.");
+                        return;
+                    }
+                }
+                if(card.heal) {
+                    setPlayerHp(h => Math.min(50, h + card.heal));
+                    msg += ` Repaired ${card.heal} HP.`;
+                }
+                if(card.self) {
+                    setPlayerHp(h => Math.max(0, h - card.self));
+                    msg += ` Took ${card.self} recoil.`;
+                }
+                setLog(msg);
+            };
+
+            const endTurn = () => {
+                if(won) return;
+                setEnergy(3);
+                const dmg = Math.floor(Math.random() * 8) + 5;
+                setPlayerHp(h => Math.max(0, h - dmg));
+                setLog(`Void Beast hits for ${dmg} dmg!`);
+            };
+
+            return (
+                <div className="flex flex-col items-center justify-center h-full relative p-8 max-w-4xl mx-auto">
+                    <button onClick={onBack} className="absolute top-4 left-4 flex items-center gap-2 text-gray-400 hover:text-white font-mono"><Icons.Back/> ABORT</button>
+                    <h2 className="text-4xl font-display font-bold text-white mb-8">VOID DECK: FRACTURED RUN</h2>
+
+                    <div className="flex justify-between w-full mb-8 items-center bg-gray-900/50 p-8 rounded-xl border border-white/10">
+                        <div className="text-center">
+                            <div className="text-5xl mb-2">👨‍🚀</div>
+                            <div className="text-neonBlue font-mono">HP: {playerHp}/50</div>
+                            <div className="text-yellow-400 font-mono text-sm">ENERGY: {energy}/3</div>
+                        </div>
+                        <div className="text-xl font-mono text-gray-600">VS</div>
+                        <div className="text-center">
+                            <div className={`text-5xl mb-2 ${won ? 'opacity-20 grayscale' : ''}`}>👾</div>
+                            <div className="text-neonRed font-mono">HP: {enemyHp}/100</div>
+                        </div>
+                    </div>
+
+                    <div className="w-full bg-black/80 border border-gray-700 p-2 text-center text-green-400 font-mono text-sm mb-8 rounded">
+                        {log}
+                    </div>
+
+                    <div className="flex gap-4">
+                        {cards.map(card => (
+                            <button 
+                                key={card.id}
+                                onClick={() => playCard(card)}
+                                disabled={energy < card.cost || won}
+                                className={`w-32 h-48 border rounded-xl flex flex-col items-center justify-center gap-2 transition-all hover:-translate-y-2 bg-gray-800
+                                    ${energy < card.cost ? 'opacity-50 cursor-not-allowed border-gray-700' : 'border-blue-500 hover:border-white shadow-lg cursor-pointer'}
+                                `}
+                            >
+                                <div className="text-3xl">{card.icon}</div>
+                                <div className="font-bold text-sm text-center">{card.name}</div>
+                                <div className="text-xs text-blue-300 font-mono">COST: {card.cost}</div>
+                            </button>
+                        ))}
+                    </div>
+
+                    <button onClick={endTurn} disabled={won} className="mt-8 px-8 py-2 bg-red-900/50 border border-red-500 text-red-200 font-mono hover:bg-red-800 transition-colors disabled:opacity-50">
+                        END TURN
+                    </button>
+                </div>
+            );
+        };
+
+        // --- GAME 4: NEON SWARM (Arcade Shooter) ---
+        const NeonSwarm = ({ onBack, unlockAchievement }) => {
+            const canvasRef = useRef(null);
+            const [score, setScore] = useState(0);
+            const [gameOver, setGameOver] = useState(false);
+
+            useEffect(() => {
+                const canvas = canvasRef.current;
+                const ctx = canvas.getContext('2d');
+                let animationId;
+                let bullets = [];
+                let enemies = [];
+                let player = { x: 400, y: 300 };
+                let keys = {};
+                let mouse = { x: 0, y: 0 };
+                let frame = 0;
+
+                const handleKey = (e, state) => keys[e.key.toLowerCase()] = state;
+                const handleMove = (e) => {
+                    const rect = canvas.getBoundingClientRect();
+                    mouse = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+                };
+                const handleClick = () => {
+                    const angle = Math.atan2(mouse.y - player.y, mouse.x - player.x);
+                    bullets.push({ x: player.x, y: player.y, vx: Math.cos(angle)*7, vy: Math.sin(angle)*7 });
+                };
+
+                window.addEventListener('keydown', e => handleKey(e, true));
+                window.addEventListener('keyup', e => handleKey(e, false));
+                window.addEventListener('mousemove', handleMove);
+                window.addEventListener('mousedown', handleClick);
+
+                const loop = () => {
+                    if (gameOver) return;
+                    frame++;
+                    ctx.fillStyle = 'rgba(0,0,0,0.1)'; 
+                    ctx.fillRect(0,0,800,600);
+
+                    if(keys['w']) player.y -= 3;
+                    if(keys['s']) player.y += 3;
+                    if(keys['a']) player.x -= 3;
+                    if(keys['d']) player.x += 3;
+                    
+                    player.x = Math.max(10, Math.min(790, player.x));
+                    player.y = Math.max(10, Math.min(590, player.y));
+
+                    ctx.save();
+                    ctx.translate(player.x, player.y);
+                    ctx.rotate(Math.atan2(mouse.y - player.y, mouse.x - player.x));
+                    ctx.fillStyle = '#3b82f6';
+                    ctx.beginPath(); ctx.moveTo(10,0); ctx.lineTo(-10, 7); ctx.lineTo(-10, -7); ctx.fill();
+                    ctx.restore();
+
+                    bullets.forEach((b, i) => {
+                        b.x += b.vx; b.y += b.vy;
+                        ctx.fillStyle = '#fbbf24';
+                        ctx.fillRect(b.x-2, b.y-2, 4, 4);
+                        if(b.x < 0 || b.x > 800 || b.y < 0 || b.y > 600) bullets.splice(i, 1);
+                    });
+
+                    if(frame % 60 === 0) enemies.push({ x: Math.random()*800, y: -20, size: 20 });
+
+                    enemies.forEach((e, i) => {
+                        const angle = Math.atan2(player.y - e.y, player.x - e.x);
+                        e.x += Math.cos(angle) * 1.5;
+                        e.y += Math.sin(angle) * 1.5;
+
+                        ctx.strokeStyle = '#ef4444';
+                        ctx.lineWidth = 2;
+                        ctx.strokeRect(e.x-10, e.y-10, 20, 20);
+
+                        bullets.forEach((b, bi) => {
+                            if(Math.hypot(b.x - e.x, b.y - e.y) < 15) {
+                                enemies.splice(i, 1);
+                                bullets.splice(bi, 1);
+                                setScore(s => {
+                                    const newScore = s + 100;
+                                    if(newScore >= 1000) unlockAchievement('neon_survivor');
+                                    return newScore;
+                                });
+                            }
+                        });
+
+                        if(Math.hypot(player.x - e.x, player.y - e.y) < 20) {
+                            setGameOver(true);
+                            cancelAnimationFrame(animationId);
+                        }
+                    });
+
+                    if(!gameOver) animationId = requestAnimationFrame(loop);
+                };
+                loop();
+
+                return () => {
+                    window.removeEventListener('keydown', e => handleKey(e, true));
+                    window.removeEventListener('keyup', e => handleKey(e, false));
+                    window.removeEventListener('mousemove', handleMove);
+                    window.removeEventListener('mousedown', handleClick);
+                    cancelAnimationFrame(animationId);
+                }
+            }, [gameOver]);
+
+            return (
+                <div className="flex flex-col items-center justify-center h-full relative p-8">
+                    <button onClick={onBack} className="absolute top-4 left-4 flex items-center gap-2 text-gray-400 hover:text-white font-mono"><Icons.Back/> EXIT</button>
+                    <div className="absolute top-4 right-4 text-neonYellow font-mono text-2xl">SCORE: {score}</div>
+                    
+                    <canvas ref={canvasRef} width="800" height="600" className="border border-neonBlue rounded cursor-crosshair bg-black"></canvas>
+                    
+                    {gameOver && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/80">
+                            <div className="text-center">
+                                <h2 className="text-4xl text-neonRed font-bold mb-4">CRITICAL FAILURE</h2>
+                                <button onClick={() => window.location.reload()} className="px-6 py-2 bg-white text-black font-bold rounded">REBOOT SYSTEM</button>
+                            </div>
+                        </div>
+                    )}
+                    <p className="mt-4 text-gray-500 font-mono text-xs">WASD to Move | CLICK to Shoot</p>
+                </div>
+            );
+        };
+
+        // --- GAME 5: ECHOES OF THE MACHINE ---
+        const Echoes = ({ onBack, unlockAchievement }) => {
+            const [step, setStep] = useState(0);
+            
+            // Simplified "Puzzle" Logic for single file demo
+            // In a real app this would be a full grid recording system
+            const handleAction = (action) => {
+                if(action === 'sync') {
+                    setStep(2);
+                    unlockAchievement('time_traveler');
+                }
+            };
+
+            return (
+                <div className="flex flex-col items-center justify-center h-full relative p-8 text-center max-w-2xl mx-auto">
+                    <button onClick={onBack} className="absolute top-4 left-4 flex items-center gap-2 text-gray-400 hover:text-white font-mono"><Icons.Back/> EXIT</button>
+                    <h2 className="text-5xl font-display font-bold text-white mb-6">ECHOES OF THE MACHINE</h2>
+                    
+                    <div className="border border-white/20 p-12 bg-white/5 rounded-2xl w-full">
+                        <div className="text-6xl mb-6">⏳</div>
+                        <p className="text-gray-300 font-mono leading-relaxed mb-8">
+                            "The timeline is fractured. Cooperate with your past self to unlock the seal."
+                        </p>
+                        
+                        {step === 0 && (
+                            <button onClick={() => setStep(1)} className="px-8 py-3 bg-neonBlue text-black font-bold font-mono rounded hover:scale-105 transition-transform">
+                                RECORD TIMELINE A
+                            </button>
+                        )}
+                        
+                        {step === 1 && (
+                            <div className="animate-pulse text-neonRed font-mono mb-4">RECORDING ACTIONS...</div>
+                        )}
+                        {step === 1 && (
+                            <button onClick={() => handleAction('sync')} className="px-8 py-3 bg-neonGreen text-black font-bold font-mono rounded hover:scale-105 transition-transform">
+                                SYNCHRONIZE & EXECUTE
+                            </button>
+                        )}
+
+                        {step === 2 && (
+                            <div className="text-neonYellow font-bold text-xl">
+                                LOOP STABILIZED. PUZZLE SOLVED.
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        // --- MAIN APP COMPONENT ---
+        const App = () => {
+            const [view, setView] = useState('menu');
+            const [achievements, setAchievements] = useState([]);
+            const [notification, setNotification] = useState(null);
+
+            useEffect(() => {
+                const saved = localStorage.getItem('ak_arcade_achievements');
+                if (saved) setAchievements(JSON.parse(saved));
+            }, []);
+
+            const unlockAchievement = (id) => {
+                if (!achievements.includes(id)) {
+                    const newSet = [...achievements, id];
+                    setAchievements(newSet);
+                    localStorage.setItem('ak_arcade_achievements', JSON.stringify(newSet));
+                    
+                    const ach = ACHIEVEMENTS[id];
+                    setNotification(ach);
+                    setTimeout(() => setNotification(null), 4000);
+                }
+            };
+
+            const games = [
+                { id: 'ironhex', title: 'IRON HEX', desc: 'Turn-based tactical warfare.', icon: Icons.Hex, color: 'text-neonYellow', border: 'hover:border-neonYellow' },
+                { id: 'graviton', title: 'GRAVITON LOCK', desc: 'Physics-based gravity puzzle.', icon: Icons.Gravity, color: 'text-neonPurple', border: 'hover:border-neonPurple' },
+                { id: 'voiddeck', title: 'VOID DECK', desc: 'Roguelike card battler.', icon: Icons.Cards, color: 'text-white', border: 'hover:border-white' },
+                { id: 'neonswarm', title: 'NEON SWARM', desc: 'Top-down arcade survival.', icon: Icons.Shooter, color: 'text-neonBlue', border: 'hover:border-neonBlue' },
+                { id: 'echoes', title: 'ECHOES', desc: 'Time-loop synchronization.', icon: Icons.Time, color: 'text-neonGreen', border: 'hover:border-neonGreen' },
+            ];
+
+            return (
+                <main className="w-full min-h-screen bg-obsidian relative selection:bg-neonBlue/30">
+                    <div className="crt-scanline" />
+                    
+                    {/* Achievement Popup */}
+                    <AnimatePresence>
+                        {notification && (
+                            <motion.div 
+                                initial={{ y: 100, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                exit={{ y: 100, opacity: 0 }}
+                                className="fixed bottom-8 right-8 z-[100] bg-gray-900 border border-neonYellow/50 p-4 rounded-lg shadow-[0_0_30px_rgba(234,179,8,0.2)] flex items-center gap-4 achievement-pop"
+                            >
+                                <div className="p-3 bg-neonYellow/10 rounded-full text-neonYellow">
+                                    <Icons.Trophy />
+                                </div>
+                                <div>
+                                    <h4 className="text-neonYellow font-bold text-xs tracking-widest">ACHIEVEMENT UNLOCKED</h4>
+                                    <p className="text-white font-bold text-lg">{notification.title}</p>
+                                    <p className="text-gray-400 text-xs font-mono">{notification.desc}</p>
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
+                    {/* MAIN CONTENT SWITCHER */}
+                    <AnimatePresence mode="wait">
+                        {view === 'menu' && (
+                            <motion.div key="menu" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="min-h-screen flex flex-col p-8">
+                                <header className="flex justify-between items-end mb-12 border-b border-white/10 pb-6">
+                                    <div>
+                                        <h1 className="text-6xl md:text-8xl font-display font-black text-transparent bg-clip-text bg-gradient-to-r from-neonBlue via-neonPurple to-neonRed tracking-tighter">ARCADE ZONE</h1>
+                                        <p className="text-gray-400 font-mono mt-2 flex items-center gap-2">
+                                            <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                                            SYSTEM READY // SELECT MODULE
+                                        </p>
+                                    </div>
+                                    <a href="./index.html" className="flex items-center gap-2 text-sm font-mono text-gray-500 hover:text-white transition-colors border border-white/10 px-4 py-2 rounded hover:bg-white/5">
+                                        <Icons.Home /> RETURN TO MAIN
+                                    </a>
+                                </header>
+
+                                <div className="flex flex-col lg:flex-row gap-8 flex-1">
+                                    {/* Game Grid */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full lg:w-3/4">
+                                        {games.map(g => (
+                                            <button 
+                                                key={g.id}
+                                                onClick={() => setView(g.id)}
+                                                className={`group relative h-48 bg-gray-900/40 border border-white/10 rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:bg-gray-900/60 p-6 text-left flex flex-col justify-between ${g.border}`}
+                                            >
+                                                <div className="absolute inset-0 bg-gradient-to-br from-transparent to-black/80 z-0"></div>
+                                                <div className={`relative z-10 p-3 rounded-lg bg-white/5 w-fit ${g.color}`}>
+                                                    <g.icon />
+                                                </div>
+                                                <div className="relative z-10">
+                                                    <h3 className={`text-3xl font-display font-bold ${g.color}`}>{g.title}</h3>
+                                                    <p className="text-gray-400 text-xs font-mono mt-1">{g.desc}</p>
+                                                </div>
+                                                <div className={`absolute bottom-6 right-6 opacity-0 group-hover:opacity-100 transition-opacity ${g.color}`}>
+                                                    <Icons.Play />
+                                                </div>
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    {/* Sidebar: Trophy Room */}
+                                    <div className="w-full lg:w-1/4 bg-gray-900/20 border border-white/10 rounded-2xl p-6 h-fit">
+                                        <h3 className="text-xl font-display font-bold text-neonYellow mb-6 flex items-center gap-2 border-b border-white/5 pb-4">
+                                            <Icons.Trophy /> TROPHY ROOM
+                                        </h3>
+                                        <div className="space-y-3">
+                                            {Object.values(ACHIEVEMENTS).map(ach => {
+                                                const unlocked = achievements.includes(ach.id);
+                                                return (
+                                                    <div key={ach.id} className={`p-3 rounded border flex items-center gap-3 transition-all ${unlocked ? 'bg-neonYellow/5 border-neonYellow/30' : 'bg-black/20 border-white/5 opacity-40 grayscale'}`}>
+                                                        <div className={unlocked ? 'text-neonYellow' : 'text-gray-600'}>
+                                                            {unlocked ? <ach.icon size={18} /> : <Icons.Lock size={18} />}
+                                                        </div>
+                                                        <div>
+                                                            <div className={`text-sm font-bold ${unlocked ? 'text-white' : 'text-gray-500'}`}>{ach.title}</div>
+                                                            {unlocked && <div className="text-[10px] text-gray-400 font-mono">{ach.desc}</div>}
+                                                        </div>
+                                                    </div>
+                                                )
+                                            })}
+                                        </div>
+                                        <div className="mt-6 pt-4 border-t border-white/10 text-center font-mono text-xs text-gray-500">
+                                            {achievements.length} / {Object.keys(ACHIEVEMENTS).length} UNLOCKED
+                                        </div>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
+
+                        {/* Game Views */}
+                        {view === 'ironhex' && <motion.div key="ironhex" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="h-screen"><IronHex onBack={() => setView('menu')} unlockAchievement={unlockAchievement} /></motion.div>}
+                        {view === 'graviton' && <motion.div key="graviton" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="h-screen"><GravitonLock onBack={() => setView('menu')} unlockAchievement={unlockAchievement} /></motion.div>}
+                        {view === 'voiddeck' && <motion.div key="voiddeck" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="h-screen"><VoidDeck onBack={() => setView('menu')} unlockAchievement={unlockAchievement} /></motion.div>}
+                        {view === 'neonswarm' && <motion.div key="neonswarm" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="h-screen"><NeonSwarm onBack={() => setView('menu')} unlockAchievement={unlockAchievement} /></motion.div>}
+                        {view === 'echoes' && <motion.div key="echoes" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="h-screen"><Echoes onBack={() => setView('menu')} unlockAchievement={unlockAchievement} /></motion.div>}
+                    </AnimatePresence>
+                </main>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
