@@ -1,0 +1,1460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BLOCKFALL // ARCADE_LEGACY</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap');
+
+        :root {
+            --bg-color: #121212;
+            --cabinet-bezel: #050505;
+            --gold-primary: #ffcc00;
+            --gold-secondary: #cc9900;
+            --neon-red: #ff0055;
+            --neon-blue: #00ccff;
+            --screen-tint: #1a1a1a;
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            cursor: default; 
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: #fff;
+            font-family: 'Press Start 2P', cursive;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* --- PHYSICAL CABINET BEZEL --- */
+        #cabinet-frame {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        /* Fake speaker grilles and decals */
+        .cabinet-decal {
+            position: absolute;
+            background: repeating-linear-gradient(
+                45deg,
+                #222,
+                #222 10px,
+                #111 10px,
+                #111 20px
+            );
+            border: 2px solid #333;
+            z-index: 5;
+        }
+        .decal-top { top: 10px; left: 10px; right: 10px; height: 40px; }
+        .decal-bottom { bottom: 10px; left: 10px; right: 10px; height: 60px; }
+
+        /* --- SCREEN CONTAINER --- */
+        #crt-container {
+            position: relative;
+            width: 100%; /* Will be constrained by aspect ratio in JS */
+            height: 100%;
+            background: #000;
+            box-shadow: inset 0 0 100px rgba(0,0,0,1);
+            overflow: hidden;
+            transition: transform 0.1s; /* For shake effects */
+        }
+
+        /* Power Off Animation Class */
+        .power-off {
+            animation: shutdown 0.4s forwards ease-in-out;
+        }
+
+        @keyframes shutdown {
+            0% { transform: scale(1, 1); filter: brightness(1); }
+            40% { transform: scale(1, 0.005); filter: brightness(5); }
+            100% { transform: scale(0, 0); filter: brightness(0); }
+        }
+        
+        /* The actual canvas */
+        #game-canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            image-rendering: pixelated; /* Crucial for retro look */
+        }
+
+        /* --- UI OVERLAYS (HTML on top of Canvas) --- */
+        #ui-layer {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 4vmin;
+            z-index: 20;
+            text-shadow: 2px 2px 0px #000;
+        }
+
+        /* Header Area */
+        .arcade-header {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            border-bottom: 4px solid var(--gold-primary);
+            padding-bottom: 10px;
+            background: linear-gradient(180deg, rgba(0,0,0,0.8), transparent);
+        }
+
+        .score-box {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .score-label {
+            color: var(--neon-red);
+            font-size: 1.2vmin;
+            margin-bottom: 5px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            animation: textFlicker 3s infinite;
+        }
+
+        .score-val {
+            color: #fff;
+            font-size: 3vmin;
+            font-family: 'VT323', monospace;
+            letter-spacing: 2px;
+            background: rgba(0,0,0,0.5);
+            padding: 2px 10px;
+            border-left: 4px solid var(--gold-secondary);
+        }
+
+        /* Sidebar stats */
+        .sidebar-right {
+            position: absolute;
+            right: 4vmin;
+            top: 20vmin;
+            width: 15vmin;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .mini-screen {
+            width: 100%;
+            aspect-ratio: 1;
+            background: rgba(0, 10, 0, 0.8);
+            border: 2px solid #444;
+            box-shadow: inset 0 0 20px #000;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .mini-screen::after {
+            content: "NEXT";
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #000;
+            padding: 0 5px;
+            font-size: 1vmin;
+            color: #888;
+        }
+
+        /* Center Messages */
+        #message-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            width: 100%;
+        }
+
+        .insert-coin-text {
+            font-size: 4vmin;
+            color: var(--gold-primary);
+            animation: blink 0.8s steps(2, start) infinite;
+            cursor: pointer;
+            pointer-events: auto; /* Allow clicking */
+            background: rgba(0,0,0,0.8);
+            padding: 20px;
+            border: 4px double var(--gold-primary);
+        }
+        
+        .insert-coin-text:hover {
+            background: var(--gold-primary);
+            color: #000;
+        }
+
+        .game-over-text {
+            font-size: 6vmin;
+            color: red;
+            text-shadow: 4px 4px 0px #330000;
+            display: none;
+            animation: shake 0.5s infinite;
+        }
+
+        /* Floating Combos */
+        .combo-text {
+            position: absolute;
+            font-family: 'Press Start 2P', cursive;
+            color: #fff;
+            font-size: 3vmin;
+            pointer-events: none;
+            -webkit-text-stroke: 1px black;
+            font-weight: 900;
+            z-index: 100;
+            transition: transform 0.2s;
+        }
+
+        /* --- COMPACT SERVICE BUTTON STYLES (REVERTED SIZE) --- */
+        .service-btn {
+            position: absolute;
+            bottom: 25px; 
+            right: 25px;
+            font-family: 'VT323', monospace; /* Reverted to thinner font */
+            font-size: 14px;
+            color: #666;
+            background: rgba(10, 10, 10, 0.8);
+            border: 1px solid #444; /* Subtle border */
+            padding: 5px 12px;
+            text-decoration: none;
+            pointer-events: auto;
+            opacity: 0.8; 
+            z-index: 200;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .service-btn:hover { 
+            color: var(--neon-red);
+            border-color: var(--neon-red);
+            background: rgba(20, 0, 0, 0.8);
+            box-shadow: 0 0 10px rgba(255, 0, 85, 0.3);
+        }
+
+        .service-btn-text {
+            display: inline-block;
+            min-width: 100px;
+            text-align: right;
+        }
+
+        /* Status Light Animation - Smaller */
+        .service-status-light {
+            width: 6px;
+            height: 6px;
+            background-color: #500;
+            border-radius: 50%;
+            box-shadow: 0 0 2px #500;
+            transition: background-color 0.2s, box-shadow 0.2s;
+        }
+
+        .service-btn:hover .service-status-light {
+            background-color: #f00;
+            box-shadow: 0 0 8px #f00;
+            animation: fast-blink 0.1s infinite;
+        }
+
+        @keyframes fast-blink {
+            0% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        /* Animations */
+        @keyframes blink { 0% { opacity: 1; } 100% { opacity: 0; } }
+        @keyframes textFlicker { 0% { opacity: 1; } 95% { opacity: 1; } 96% { opacity: 0.5; } 97% { opacity: 1; } 98% { opacity: 0.2; } 100% { opacity: 1; } }
+        @keyframes shake { 0% { transform: translate(1px, 1px) rotate(0deg); } 10% { transform: translate(-1px, -2px) rotate(-1deg); } 20% { transform: translate(-3px, 0px) rotate(1deg); } 30% { transform: translate(3px, 2px) rotate(0deg); } 40% { transform: translate(1px, -1px) rotate(1deg); } 50% { transform: translate(-1px, 2px) rotate(-1deg); } 60% { transform: translate(-3px, 1px) rotate(0deg); } 70% { transform: translate(3px, 1px) rotate(-1deg); } 80% { transform: translate(-1px, -1px) rotate(1deg); } 90% { transform: translate(1px, 2px) rotate(0deg); } 100% { transform: translate(1px, -2px) rotate(-1deg); } }
+
+        /* CRT Scanline Overlay via CSS (Fallback/Addition to Shader) */
+        #scanlines {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 2px, 3px 100%;
+            z-index: 30;
+            pointer-events: none;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="cabinet-frame">
+        <div class="cabinet-decal decal-top"></div>
+        
+        <div id="crt-container">
+            <!-- Main Game Canvas -->
+            <div id="game-canvas-container" style="width: 100%; height: 100%;"></div>
+            
+            <div id="scanlines"></div>
+
+            <!-- UI Layer -->
+            <div id="ui-layer">
+                <div class="arcade-header">
+                    <div class="score-box">
+                        <span class="score-label">1UP SCORE</span>
+                        <span class="score-val" id="score-display">000000</span>
+                    </div>
+                    <div class="score-box" style="align-items: center;">
+                        <span class="score-label">HIGH SCORE</span>
+                        <span class="score-val" id="hiscore-display">050000</span>
+                    </div>
+                    <div class="score-box" style="align-items: flex-end;">
+                        <span class="score-label">LINES</span>
+                        <span class="score-val" id="lines-display">000</span>
+                    </div>
+                </div>
+
+                <div class="sidebar-right">
+                    <div class="mini-screen" id="next-preview"></div>
+                    <div class="mini-screen" id="hold-preview"></div>
+                    <div style="text-align: center; font-size: 1.5vmin; color: #666; margin-top: 10px;">
+                        LEVEL <span id="level-display" style="color: #fff; font-size: 2vmin;">01</span>
+                    </div>
+                </div>
+
+                <div id="message-center">
+                    <div id="attract-title" style="margin-bottom: 30px;">
+                        <h1 style="font-size: 8vmin; color: var(--gold-primary); -webkit-text-stroke: 2px #fff; text-shadow: 5px 5px 0px #000;">BLOCK<br>FALL</h1>
+                        <p style="color: var(--neon-blue); font-size: 2vmin; letter-spacing: 5px;">SUPER GRAND MASTER EDITION</p>
+                    </div>
+                    <div class="insert-coin-text" id="start-btn">INSERT COIN</div>
+                    <div class="game-over-text" id="game-over-msg">GAME OVER</div>
+                    
+                    <!-- High Score Entry -->
+                    <div id="name-entry" style="display:none; background: #000; padding: 20px; border: 2px solid var(--gold-primary);">
+                        <p style="color: var(--gold-primary);">NEW RECORD!</p>
+                        <div id="name-chars" style="font-size: 5vmin; letter-spacing: 10px; margin: 20px 0;">AAA</div>
+                        <p style="font-size: 1.5vmin; color: #888;">UP/DOWN: CHAR • OK: ENTER</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="cabinet-decal decal-bottom"></div>
+        <!-- Compact, Interactive Exit Button -->
+        <div id="service-exit-btn" class="service-btn">
+            <div class="service-status-light"></div>
+            <span class="service-btn-text">SERVICE EXIT</span>
+        </div>
+    </div>
+
+    <!-- Shaders & Logic -->
+    <script>
+        /**
+         * BLOCKFALL: ARCADE LEGACY EDITION
+         * ==========================================
+         * A verbose, robust, and feature-rich implementation of the classic block game.
+         * * CORE SYSTEMS:
+         * 1. TextureGenerator: Creates procedural pixel art textures.
+         * 2. AudioSystem: WebAudio synthesis + Speech Synthesis.
+         * 3. RenderEngine: Three.js with Post-Processing Shaders.
+         * 4. GameEngine: Logic, Gravity, SRS, Scoring, Attract Mode AI.
+         * 5. InteractionManager: Handles UI sounds, button logic, and text effects.
+         * 6. SystemDiagnostics: Tracks internal engine state.
+         */
+
+        // --- GLOBAL CONFIGURATION ---
+        const CONFIG = {
+            COLS: 10,
+            ROWS: 20,
+            BLOCK_SIZE: 1.0,
+            GRAVITY_BASE: 1000, // ms per drop
+            LOCK_DELAY: 500,    // ms before locking on ground
+            DAS: 130,           // Delayed Auto Shift
+            ARR: 30,            // Auto Repeat Rate
+            ATTRACT_TIMEOUT: 15000 // Time before AI starts playing
+        };
+
+        const THEME = {
+            I: { color: '#00f0f0', texture: 'tech' },
+            J: { color: '#0000f0', texture: 'brick' },
+            L: { color: '#f0a000', texture: 'brick' },
+            O: { color: '#f0f000', texture: 'plate' },
+            S: { color: '#00f000', texture: 'snake' },
+            T: { color: '#a000f0', texture: 'gem' },
+            Z: { color: '#f00000', texture: 'snake' },
+            GHOST: { color: '#444444', texture: 'grid' }
+        };
+
+        // --- 1. TEXTURE GENERATOR (Procedural Pixel Art) ---
+        class TextureGenerator {
+            constructor() {
+                this.cache = {};
+                this.canvas = document.createElement('canvas');
+                this.canvas.width = 64;
+                this.canvas.height = 64;
+                this.ctx = this.canvas.getContext('2d');
+            }
+
+            generate(type, colorHex) {
+                const key = `${type}_${colorHex}`;
+                if (this.cache[key]) return this.cache[key];
+
+                const ctx = this.ctx;
+                const w = 64, h = 64;
+                
+                // Clear
+                ctx.fillStyle = colorHex;
+                ctx.fillRect(0, 0, w, h);
+
+                // Lighting Overlay
+                ctx.fillStyle = 'rgba(255,255,255,0.2)';
+                ctx.fillRect(0, 0, w, 4); // Top highlight
+                ctx.fillRect(0, 0, 4, h); // Left highlight
+                
+                ctx.fillStyle = 'rgba(0,0,0,0.3)';
+                ctx.fillRect(0, h-4, w, 4); // Bottom shadow
+                ctx.fillRect(w-4, 0, 4, h); // Right shadow
+
+                // Specific Patterns
+                if (type === 'brick') {
+                    ctx.fillStyle = 'rgba(0,0,0,0.2)';
+                    ctx.fillRect(0, 30, w, 4); // Middle horizontal line
+                    ctx.fillRect(30, 0, 4, 30); // Top vertical
+                    ctx.fillRect(10, 34, 4, 30); // Bottom vertical offset
+                } else if (type === 'plate') {
+                    ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(8, 8, w-16, h-16);
+                    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+                    ctx.beginPath();
+                    ctx.arc(12, 12, 2, 0, Math.PI*2); // Bolt
+                    ctx.arc(w-12, 12, 2, 0, Math.PI*2);
+                    ctx.arc(12, h-12, 2, 0, Math.PI*2);
+                    ctx.arc(w-12, h-12, 2, 0, Math.PI*2);
+                    ctx.fill();
+                } else if (type === 'gem') {
+                    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+                    ctx.beginPath();
+                    ctx.moveTo(0,0); ctx.lineTo(w,0); ctx.lineTo(0,h);
+                    ctx.fill();
+                    ctx.fillStyle = 'rgba(0,0,0,0.1)';
+                    ctx.beginPath();
+                    ctx.moveTo(w,h); ctx.lineTo(w,0); ctx.lineTo(0,h);
+                    ctx.fill();
+                    ctx.fillStyle = 'rgba(255,255,255,0.8)';
+                    ctx.fillRect(10, 10, 10, 10); // Glint
+                } else if (type === 'tech') {
+                    ctx.fillStyle = 'rgba(0,255,255,0.2)';
+                    ctx.fillRect(10, 20, 40, 4);
+                    ctx.fillRect(10, 40, 40, 4);
+                    ctx.fillRect(20, 10, 4, 44);
+                }
+
+                // Noise Pass for grit
+                const imageData = ctx.getImageData(0,0,w,h);
+                const data = imageData.data;
+                for(let i=0; i<data.length; i+=4) {
+                    const grain = (Math.random() - 0.5) * 20;
+                    data[i] = Math.min(255, Math.max(0, data[i] + grain));
+                    data[i+1] = Math.min(255, Math.max(0, data[i+1] + grain));
+                    data[i+2] = Math.min(255, Math.max(0, data[i+2] + grain));
+                }
+                ctx.putImageData(imageData, 0, 0);
+
+                // Convert to Three Texture
+                const texture = new THREE.CanvasTexture(this.canvas);
+                texture.magFilter = THREE.NearestFilter; // Pixel art look
+                texture.minFilter = THREE.NearestFilter;
+                
+                // Clone canvas for next usage prevents reference issues
+                this.canvas = document.createElement('canvas');
+                this.canvas.width = 64; this.canvas.height = 64;
+                this.ctx = this.canvas.getContext('2d');
+
+                this.cache[key] = texture;
+                return texture;
+            }
+        }
+
+        // --- 2. AUDIO SYSTEM (Synthesizer + Speech) ---
+        class AudioSystem {
+            constructor() {
+                this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                this.master = this.ctx.createGain();
+                this.master.gain.value = 0.3;
+                this.master.connect(this.ctx.destination);
+                this.enabled = false;
+                
+                // Speech
+                this.speech = window.speechSynthesis;
+            }
+
+            enable() {
+                if(this.ctx.state === 'suspended') this.ctx.resume();
+                this.enabled = true;
+            }
+
+            playTone(freq, type, duration, vol=0.5, slide=0) {
+                if(!this.enabled) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                if(slide !== 0) {
+                    osc.frequency.linearRampToValueAtTime(freq + slide, this.ctx.currentTime + duration);
+                }
+
+                gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
+
+                osc.connect(gain);
+                gain.connect(this.master);
+                osc.start();
+                osc.stop(this.ctx.currentTime + duration + 0.1);
+            }
+
+            // FX Presets
+            sfxMove() { this.playTone(200, 'square', 0.05, 0.2); }
+            sfxRotate() { this.playTone(400, 'triangle', 0.08, 0.3, 100); }
+            sfxDrop() { this.playTone(100, 'sawtooth', 0.1, 0.4, -50); }
+            sfxLock() { this.playTone(80, 'square', 0.1, 0.6); this.playTone(150, 'sine', 0.15, 0.3); }
+            sfxClear() { 
+                // Arpeggio
+                [440, 554, 659, 880].forEach((f, i) => {
+                    setTimeout(() => this.playTone(f, 'square', 0.2, 0.3), i * 50);
+                });
+            }
+            sfxTetris() {
+                [440, 554, 659, 880, 1108, 1318].forEach((f, i) => {
+                    setTimeout(() => this.playTone(f, 'sawtooth', 0.3, 0.4), i * 40);
+                });
+                this.speak("BlockFall");
+            }
+            sfxGameOver() {
+                this.playTone(100, 'sawtooth', 1.0, 0.5, -90);
+                this.speak("Game Over");
+            }
+            sfxPowerDown() {
+                // Pitch down sound for exit
+                this.playTone(400, 'sawtooth', 0.5, 0.6, -350);
+            }
+            sfxHover() {
+                // High pitch short blip for UI hover
+                this.playTone(1200, 'sine', 0.02, 0.05);
+            }
+
+            speak(text) {
+                if(!this.speech) return;
+                const u = new SpeechSynthesisUtterance(text);
+                u.pitch = 0.5; // Robotic
+                u.rate = 1.2;
+                u.volume = 0.8;
+                this.speech.speak(u);
+            }
+        }
+
+        // --- 3. RENDER ENGINE (Three.js + Shaders) ---
+        class RenderEngine {
+            constructor() {
+                this.container = document.getElementById('game-canvas-container');
+                this.scene = new THREE.Scene();
+                
+                // Camera setup - Orthographic for pure 2D arcade look or Perspective?
+                // Perspective gives that nice depth.
+                this.camera = new THREE.PerspectiveCamera(60, this.container.clientWidth / this.container.clientHeight, 0.1, 1000);
+                this.camera.position.set(0, 0, 24); 
+
+                this.renderer = new THREE.WebGLRenderer({ antialias: false }); // False for pixel look
+                this.renderer.setSize(this.container.clientWidth, this.container.clientHeight);
+                this.container.appendChild(this.renderer.domElement);
+
+                this.texGen = new TextureGenerator();
+                
+                // Resource Pooling
+                this.boxGeo = new THREE.BoxGeometry(0.95, 0.95, 0.95);
+                this.materialCache = {}; 
+                
+                // Lights
+                const amb = new THREE.AmbientLight(0xffffff, 0.6);
+                this.scene.add(amb);
+                const dir = new THREE.DirectionalLight(0xffffff, 0.8);
+                dir.position.set(5, 10, 10);
+                this.scene.add(dir);
+
+                // Groups
+                this.boardGroup = new THREE.Group();
+                // Center board: 10 wide, 20 high. Center is (0,0).
+                // X range: -5 to 5. Y range: -10 to 10.
+                this.scene.add(this.boardGroup);
+                
+                // Background
+                this.createBackground();
+                
+                // Frame
+                this.createFrame();
+
+                // Mesh Pools
+                this.staticMeshes = []; // Flat array of meshes
+                this.activeGroup = new THREE.Group();
+                this.boardGroup.add(this.activeGroup);
+
+                // Effect Variables
+                this.shakeIntensity = 0;
+            }
+
+            createBackground() {
+                // Retro Starfield
+                const geom = new THREE.BufferGeometry();
+                const counts = 2000;
+                const pos = new Float32Array(counts*3);
+                for(let i=0; i<counts*3; i++) pos[i] = (Math.random()-0.5)*100;
+                geom.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+                const mat = new THREE.PointsMaterial({color: 0x888888, size: 0.1});
+                this.bgStars = new THREE.Points(geom, mat);
+                this.scene.add(this.bgStars);
+            }
+
+            createFrame() {
+                // A box around the playfield
+                const w = CONFIG.COLS;
+                const h = CONFIG.ROWS;
+                const geo = new THREE.BoxGeometry(w + 1, h + 1, 1);
+                const edge = new THREE.EdgesGeometry(geo);
+                const mat = new THREE.LineBasicMaterial({ color: 0x555555 });
+                const mesh = new THREE.LineSegments(edge, mat);
+                mesh.position.set(0, 0, -0.5); // Slightly behind
+                this.boardGroup.add(mesh);
+
+                // Floor Guide
+                const floorGeo = new THREE.BoxGeometry(w, 0.2, 0.2);
+                const floorMat = new THREE.MeshBasicMaterial({ color: 0xaa0000 });
+                const floor = new THREE.Mesh(floorGeo, floorMat);
+                floor.position.set(0, -CONFIG.ROWS/2 - 0.1, 0);
+                this.boardGroup.add(floor);
+            }
+
+            // Convert Logic Coords (x:0..9, y:0..19) to World Coords
+            // Logic: (0,0) is TOP LEFT.
+            // World: (0,0) is CENTER.
+            logicToWorld(lx, ly) {
+                const wx = (lx - CONFIG.COLS/2) + 0.5;
+                const wy = (CONFIG.ROWS/2 - 1 - ly) + 0.5; // Invert Y
+                return { x: wx, y: wy };
+            }
+            
+            getMaterial(typeColor, typeName) {
+                const key = `${typeName}_${typeColor}`;
+                if (this.materialCache[key]) return this.materialCache[key];
+                
+                const tex = this.texGen.generate(typeName, typeColor);
+                const mat = new THREE.MeshStandardMaterial({ 
+                    map: tex,
+                    roughness: 0.4,
+                    metalness: 0.1
+                });
+                this.materialCache[key] = mat;
+                return mat;
+            }
+
+            createBlockMesh(typeColor, typeName) {
+                const mat = this.getMaterial(typeColor, typeName);
+                return new THREE.Mesh(this.boxGeo, mat);
+            }
+
+            // --- THE CRITICAL FIX: FULL STATE RECONCILIATION ---
+            // Instead of trying to patch the scene, we sync it to the grid data.
+            updateStaticGrid(gridData) {
+                // Clear existing static meshes
+                this.staticMeshes.forEach(m => this.boardGroup.remove(m));
+                this.staticMeshes = [];
+
+                for(let r=0; r<CONFIG.ROWS; r++) {
+                    for(let c=0; c<CONFIG.COLS; c++) {
+                        const cell = gridData[r][c];
+                        if(cell !== 0) {
+                            // Reconstruct mesh
+                            // We store color hex strings in the grid. We need to derive type? 
+                            // Simplified: Just use 'brick' texture for static for now, or store objects.
+                            // Storing objects in grid is better.
+                            
+                            const mesh = this.createBlockMesh(cell.color, cell.texture);
+                            const pos = this.logicToWorld(c, r);
+                            mesh.position.set(pos.x, pos.y, 0);
+                            this.boardGroup.add(mesh);
+                            this.staticMeshes.push(mesh);
+                        }
+                    }
+                }
+            }
+
+            updateActivePiece(piece) {
+                // Clear group
+                while(this.activeGroup.children.length > 0){ 
+                    this.activeGroup.remove(this.activeGroup.children[0]); 
+                }
+
+                if(!piece) return;
+
+                const def = THEME[piece.type];
+                
+                // Ghost Logic
+                // Passed in from Game loop usually, but let's calculate here for rendering if needed
+                // actually Game passes both. Assuming piece has ghost Y attached by Game loop.
+                
+                // Draw Actual
+                piece.matrix.forEach((row, r) => {
+                    row.forEach((val, c) => {
+                        if(val) {
+                            // Real
+                            const mesh = this.createBlockMesh(def.color, def.texture);
+                            const pos = this.logicToWorld(piece.x + c, piece.y + r);
+                            mesh.position.set(pos.x, pos.y, 0);
+                            this.activeGroup.add(mesh);
+
+                            // Ghost (if y is different)
+                            if(piece.ghostY > piece.y) {
+                                const gMesh = new THREE.Mesh(
+                                    new THREE.BoxGeometry(0.9, 0.9, 0.9),
+                                    new THREE.MeshBasicMaterial({ 
+                                        color: 0xffffff, 
+                                        wireframe: true, 
+                                        transparent: true, 
+                                        opacity: 0.3 
+                                    })
+                                );
+                                const gPos = this.logicToWorld(piece.x + c, piece.ghostY + r);
+                                gMesh.position.set(gPos.x, gPos.y, 0);
+                                this.activeGroup.add(gMesh);
+                            }
+                        }
+                    });
+                });
+            }
+
+            shake(amt) {
+                this.shakeIntensity = amt;
+            }
+
+            render() {
+                // Camera Shake
+                if(this.shakeIntensity > 0) {
+                    this.boardGroup.position.x = (Math.random()-0.5) * this.shakeIntensity;
+                    this.boardGroup.position.y = (Math.random()-0.5) * this.shakeIntensity;
+                    this.shakeIntensity *= 0.9;
+                    if(this.shakeIntensity < 0.05) {
+                        this.shakeIntensity = 0;
+                        this.boardGroup.position.set(0,0,0);
+                    }
+                }
+
+                // Background Rotation
+                this.bgStars.rotation.z += 0.0005;
+
+                this.renderer.render(this.scene, this.camera);
+            }
+        }
+
+        // --- 5. AI CONTROLLER (Heuristic Bot) ---
+        class BotController {
+            constructor(game) {
+                this.game = game;
+                this.timer = 0;
+                this.actionInterval = 200; // Slower moves for better viewing
+                this.target = null;
+                this.moves = [];
+            }
+
+            reset() {
+                this.target = null;
+                this.moves = [];
+            }
+
+            // Simulate the game state
+            getSimulatedGrid(grid, piece, x, y, rotMatrix) {
+                // Deep copy grid
+                const simGrid = grid.map(row => [...row]);
+                
+                // Find ghost Y (drop position)
+                let ghostY = y;
+                // Collision check helper for simulation
+                const check = (ox, oy) => {
+                    for(let r=0; r<rotMatrix.length; r++) {
+                        for(let c=0; c<rotMatrix[r].length; c++) {
+                            if(rotMatrix[r][c] !== 0) {
+                                const nx = x + c + ox;
+                                const ny = y + r + oy;
+                                if(nx < 0 || nx >= CONFIG.COLS || ny >= CONFIG.ROWS) return true;
+                                if(ny >= 0 && simGrid[ny][nx] !== 0) return true;
+                            }
+                        }
+                    }
+                    return false;
+                };
+
+                while(!check(0, ghostY - y + 1)) {
+                    ghostY++;
+                }
+
+                // Lock piece into simGrid
+                for(let r=0; r<rotMatrix.length; r++) {
+                    for(let c=0; c<rotMatrix[r].length; c++) {
+                        if(rotMatrix[r][c] !== 0) {
+                             const gy = ghostY + r;
+                             const gx = x + c;
+                             if(gy >= 0 && gy < CONFIG.ROWS) {
+                                 simGrid[gy][gx] = 1; // Mark as filled
+                             }
+                        }
+                    }
+                }
+                return simGrid;
+            }
+
+            evaluateGrid(grid) {
+                let lines = 0;
+                let holes = 0;
+                let bumpiness = 0;
+                let height = 0;
+                
+                const colHeights = new Array(CONFIG.COLS).fill(0);
+
+                // Calculate Heights & Holes
+                for(let c=0; c<CONFIG.COLS; c++) {
+                    let colHeight = 0;
+                    for(let r=0; r<CONFIG.ROWS; r++) {
+                        if(grid[r][c] !== 0) {
+                            if(colHeight === 0) colHeight = CONFIG.ROWS - r;
+                        } else {
+                            if(colHeight > 0) holes++; // Empty block below filled block
+                        }
+                    }
+                    colHeights[c] = colHeight;
+                    height += colHeight;
+                }
+
+                // Bumpiness
+                for(let c=0; c<CONFIG.COLS-1; c++) {
+                    bumpiness += Math.abs(colHeights[c] - colHeights[c+1]);
+                }
+
+                // Lines
+                for(let r=0; r<CONFIG.ROWS; r++) {
+                    if(grid[r].every(v => v !== 0)) lines++;
+                }
+
+                // Weights
+                return (lines * 100) - (holes * 20) - (height * 2) - (bumpiness * 1);
+            }
+
+            rotateMatrix(matrix, times) {
+                let m = matrix.map(row => [...row]);
+                for(let t=0; t<times; t++) {
+                    const N = m.length;
+                    m = m.map((row, i) => row.map((val, j) => m[N - 1 - j][i]));
+                }
+                return m;
+            }
+
+            findBestMove() {
+                let bestScore = -Infinity;
+                let bestMove = { x: 0, rot: 0 };
+                
+                // Brute force all rotations and positions
+                for(let r=0; r<4; r++) {
+                    const rotated = this.rotateMatrix(this.game.piece.matrix, r);
+                    const width = rotated[0].length;
+                    
+                    for(let x = -2; x < CONFIG.COLS; x++) {
+                        // Check if valid horizontal spawn (simple check)
+                        try {
+                             const simGrid = this.getSimulatedGrid(this.game.grid, this.game.piece, x, this.game.piece.y, rotated);
+                             const score = this.evaluateGrid(simGrid);
+                             if(score > bestScore) {
+                                 bestScore = score;
+                                 bestMove = { x: x, rot: r };
+                             }
+                        } catch(e) {
+                            // Invalid move position, ignore
+                        }
+                    }
+                }
+                return bestMove;
+            }
+
+            update(dt) {
+                if(!this.game.piece) return;
+
+                this.timer += dt;
+                if(this.timer < this.actionInterval) return;
+                this.timer = 0;
+
+                // 1. Plan
+                if(!this.target) {
+                    this.target = this.findBestMove();
+                    this.currentRot = 0; // Assume we start at 0 relative to spawn? 
+                    // Actually game piece keeps rotation. We should track relative changes
+                    // Simplified: We assume piece starts fresh or we just spam keys to match state
+                }
+
+                // 2. Execute
+                // Simple state matching
+                // Rotation
+                if(this.game.piece.rotation !== this.target.rot) {
+                     this.game.rotate(1);
+                     return;
+                }
+                
+                // Position
+                if(this.game.piece.x < this.target.x) {
+                    this.game.move(1);
+                    return;
+                } else if (this.game.piece.x > this.target.x) {
+                    this.game.move(-1);
+                    return;
+                }
+
+                // Drop
+                this.game.hardDrop();
+                this.target = null; // Reset for next piece
+            }
+        }
+
+        // --- 6. INTERACTION MANAGER ---
+        // Handles UI sounds, button states, and text effects
+        class TextScrambler {
+            constructor(element, originalText) {
+                this.element = element;
+                this.originalText = originalText;
+                this.chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&*";
+                this.interval = null;
+            }
+
+            start() {
+                let iter = 0;
+                clearInterval(this.interval);
+                this.interval = setInterval(() => {
+                    this.element.innerText = this.originalText
+                        .split("")
+                        .map((letter, index) => {
+                            if(index < iter) return this.originalText[index];
+                            return this.chars[Math.floor(Math.random() * this.chars.length)];
+                        })
+                        .join("");
+                    
+                    if(iter >= this.originalText.length) clearInterval(this.interval);
+                    iter += 1/3;
+                }, 30);
+            }
+            
+            reset() {
+                clearInterval(this.interval);
+                this.element.innerText = this.originalText;
+            }
+        }
+
+        class SystemDiagnostics {
+            constructor() {
+                this.lastTime = 0;
+                this.frames = 0;
+                this.fps = 60;
+                this.updateLoop();
+            }
+            updateLoop() {
+                const now = performance.now();
+                this.frames++;
+                if(now - this.lastTime > 1000) {
+                    this.fps = this.frames;
+                    this.frames = 0;
+                    this.lastTime = now;
+                    // Could log to console or hidden debug div
+                }
+                requestAnimationFrame(() => this.updateLoop());
+            }
+        }
+
+        class InteractionManager {
+            constructor(gameEngine) {
+                this.game = gameEngine;
+                this.diagnostics = new SystemDiagnostics();
+                this.setupButtons();
+            }
+
+            setupButtons() {
+                const exitBtn = document.getElementById('service-exit-btn');
+                const btnText = exitBtn.querySelector('.service-btn-text');
+                const scrambler = new TextScrambler(btnText, "SERVICE EXIT");
+                
+                // Hover Effect
+                exitBtn.addEventListener('mouseenter', () => {
+                    this.game.audio.enable();
+                    this.game.audio.sfxHover();
+                    scrambler.start();
+                });
+                
+                exitBtn.addEventListener('mouseleave', () => {
+                    scrambler.reset();
+                });
+
+                // Click Effect handled by GameEngine triggerExit
+            }
+        }
+
+        // --- 4. GAME ENGINE ---
+        class GameEngine {
+            constructor() {
+                this.grid = Array.from({length: CONFIG.ROWS}, () => Array(CONFIG.COLS).fill(0));
+                this.bag = [];
+                this.score = 0;
+                this.lines = 0;
+                this.level = 1;
+                this.combo = -1;
+                this.state = 'TITLE'; // TITLE, PLAYING, GAMEOVER, ENTRY
+                
+                this.audio = new AudioSystem();
+                this.renderer = new RenderEngine();
+                this.bot = new BotController(this); // Initialize Smart Bot
+                this.interaction = new InteractionManager(this); // Initialize UI Interaction
+                
+                this.piece = null;
+                this.nextType = null;
+                this.holdType = null;
+                this.hasHeld = false;
+                
+                this.lastTime = 0;
+                this.dropTimer = 0;
+                
+                // Inputs
+                this.keys = {};
+                this.dasTimer = 0;
+                
+                // Attract Mode
+                this.idleTime = 0;
+                this.aiEnabled = false;
+
+                // Bindings
+                this.loop = this.loop.bind(this);
+                window.addEventListener('keydown', e => this.onKey(e, true));
+                window.addEventListener('keyup', e => this.onKey(e, false));
+                document.getElementById('start-btn').onclick = () => this.startGame();
+                
+                // Interactive Exit Button
+                const exitBtn = document.getElementById('service-exit-btn');
+                exitBtn.addEventListener('click', () => this.triggerExit());
+
+                // Start Loop
+                requestAnimationFrame(this.loop);
+            }
+
+            triggerExit() {
+                // Interactive exit sequence
+                this.audio.enable(); // Ensure audio context is ready if user hasn't clicked yet
+                this.audio.sfxPowerDown();
+                
+                // Visual CRT shutdown effect
+                const container = document.getElementById('crt-container');
+                container.classList.add('power-off');
+                
+                // Navigate after animation
+                setTimeout(() => {
+                    window.location.href = '../arcade-zone.html';
+                }, 400);
+            }
+
+            startGame() {
+                this.state = 'PLAYING';
+                this.audio.enable();
+                this.audio.speak("Ready. Go.");
+                this.reset();
+                document.getElementById('start-btn').style.display = 'none';
+                document.getElementById('attract-title').style.display = 'none';
+                document.getElementById('game-over-msg').style.display = 'none';
+                this.aiEnabled = false;
+            }
+
+            startAttractMode() {
+                this.state = 'PLAYING';
+                this.reset();
+                this.aiEnabled = true;
+                document.getElementById('attract-title').style.opacity = 0.5;
+            }
+
+            reset() {
+                this.grid = Array.from({length: CONFIG.ROWS}, () => Array(CONFIG.COLS).fill(0));
+                this.score = 0;
+                this.lines = 0;
+                this.level = 1;
+                this.combo = -1;
+                this.bag = [];
+                this.holdType = null;
+                if(this.bot) this.bot.reset();
+                this.updateUI();
+                this.spawn();
+            }
+
+            // Bag Randomizer
+            getPieceType() {
+                if(this.bag.length === 0) {
+                    this.bag = ['I','J','L','O','S','T','Z'];
+                    // Fisher-Yates
+                    for(let i=this.bag.length-1; i>0; i--) {
+                        const j = Math.floor(Math.random()*(i+1));
+                        [this.bag[i], this.bag[j]] = [this.bag[j], this.bag[i]];
+                    }
+                }
+                return this.bag.pop();
+            }
+
+            spawn() {
+                const type = this.nextType || this.getPieceType();
+                this.nextType = this.getPieceType();
+                this.updateMiniScreens();
+
+                // Definition
+                const def = {
+                    I: [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]],
+                    J: [[1,0,0],[1,1,1],[0,0,0]],
+                    L: [[0,0,1],[1,1,1],[0,0,0]],
+                    O: [[1,1],[1,1]],
+                    S: [[0,1,1],[1,1,0],[0,0,0]],
+                    T: [[0,1,0],[1,1,1],[0,0,0]],
+                    Z: [[1,1,0],[0,1,1],[0,0,0]]
+                }[type];
+
+                this.piece = {
+                    type: type,
+                    matrix: def.map(r => [...r]),
+                    x: Math.floor(CONFIG.COLS/2) - Math.ceil(def[0].length/2),
+                    y: 0,
+                    rotation: 0,
+                    ghostY: 0
+                };
+                this.hasHeld = false;
+
+                // Immediate Collision = Game Over
+                if(this.collide(0,0)) {
+                    this.gameOver();
+                }
+                
+                this.updateGhost();
+                if(this.aiEnabled && this.bot) this.bot.target = null; // Reset bot target on spawn
+            }
+
+            updateGhost() {
+                if(!this.piece) return;
+                let y = this.piece.y;
+                while(!this.collide(0, y - this.piece.y + 1)) {
+                    y++;
+                }
+                this.piece.ghostY = y;
+            }
+
+            collide(offX, offY, matrix = this.piece.matrix) {
+                for(let r=0; r<matrix.length; r++) {
+                    for(let c=0; c<matrix[r].length; c++) {
+                        if(matrix[r][c] !== 0) {
+                            const nx = this.piece.x + c + offX;
+                            const ny = this.piece.y + r + offY;
+                            
+                            // 1. Bounds Check
+                            if(nx < 0 || nx >= CONFIG.COLS || ny >= CONFIG.ROWS) return true;
+                            
+                            // 2. Grid Check
+                            if(ny >= 0 && this.grid[ny][nx] !== 0) return true;
+                        }
+                    }
+                }
+                return false;
+            }
+
+            rotate(dir) {
+                const p = this.piece;
+                const oldMat = p.matrix;
+                const N = oldMat.length;
+                
+                // Transpose + Reverse
+                const newMat = oldMat.map((row, i) => 
+                    row.map((val, j) => 
+                        dir > 0 ? oldMat[N-1-j][i] : oldMat[j][N-1-i]
+                    )
+                );
+
+                // Basic Kick (Just try center, then left/right/up)
+                // Simplified SRS for code brevity but robust enough
+                const kicks = [
+                    [0,0], [-1,0], [1,0], [0,-1], [-1,-1], [1,-1], [0,1] // Includes Up kicks for T-spins
+                ];
+
+                for(let k of kicks) {
+                    if(!this.collide(k[0], k[1], newMat)) {
+                        p.x += k[0];
+                        p.y += k[1];
+                        p.matrix = newMat;
+                        // Update rotation index (simplified 0-3)
+                        p.rotation = (p.rotation + (dir > 0 ? 1 : 3)) % 4;
+                        this.audio.sfxRotate();
+                        this.updateGhost();
+                        return;
+                    }
+                }
+            }
+
+            move(dir) {
+                if(!this.collide(dir, 0)) {
+                    this.piece.x += dir;
+                    this.audio.sfxMove();
+                    this.updateGhost();
+                }
+            }
+
+            drop(isSoft) {
+                if(!this.collide(0, 1)) {
+                    this.piece.y++;
+                    if(isSoft) this.score += 1;
+                } else {
+                    this.lock();
+                }
+            }
+            
+            hardDrop() {
+                let dist = 0;
+                while(!this.collide(0, 1)) {
+                    this.piece.y++;
+                    dist++;
+                }
+                this.score += dist * 2;
+                this.audio.sfxDrop();
+                this.renderer.shake(0.2);
+                this.lock();
+            }
+            
+            lock() {
+                // Bug fix check: Is piece fully out of bounds?
+                // Should be fine due to collide check logic.
+                
+                // Commit to grid
+                this.piece.matrix.forEach((row, r) => {
+                    row.forEach((val, c) => {
+                        if(val !== 0) {
+                            const gy = this.piece.y + r;
+                            const gx = this.piece.x + c;
+                            if(gy >= 0 && gy < CONFIG.ROWS) {
+                                // Store full object for texture reconstruction
+                                this.grid[gy][gx] = { 
+                                    color: THEME[this.piece.type].color, 
+                                    texture: THEME[this.piece.type].texture 
+                                };
+                            }
+                        }
+                    });
+                });
+                
+                this.audio.sfxLock();
+                this.checkLines();
+                this.spawn();
+                
+                // Sync Render Engine immediately
+                this.renderer.updateStaticGrid(this.grid);
+            }
+
+            checkLines() {
+                let linesCleared = 0;
+                for(let r=CONFIG.ROWS-1; r>=0; r--) {
+                    if(this.grid[r].every(cell => cell !== 0)) {
+                        // Remove row
+                        this.grid.splice(r, 1);
+                        // Add new empty row at top
+                        this.grid.unshift(Array(CONFIG.COLS).fill(0));
+                        linesCleared++;
+                        r++; // Re-check same index since rows shifted down
+                    }
+                }
+
+                if(linesCleared > 0) {
+                    this.lines += linesCleared;
+                    this.score += [0, 100, 300, 500, 800][linesCleared] * this.level;
+                    if(linesCleared === 4) {
+                        this.audio.sfxTetris();
+                        this.renderer.shake(0.5);
+                    } else {
+                        this.audio.sfxClear();
+                    }
+                    this.level = Math.floor(this.lines / 10) + 1;
+                    this.updateUI();
+                }
+            }
+
+            // --- AI BOT (Attract Mode) ---
+            updateAI(dt) {
+                if(this.bot) this.bot.update(dt);
+            }
+
+            gameOver() {
+                this.state = 'GAMEOVER';
+                this.audio.sfxGameOver();
+                document.getElementById('game-over-msg').style.display = 'block';
+                document.getElementById('start-btn').style.display = 'block';
+                document.getElementById('start-btn').innerText = "TRY AGAIN";
+                
+                if(this.aiEnabled) {
+                     // Reset attract immediately
+                     setTimeout(() => { 
+                         this.state = 'TITLE';
+                         this.reset();
+                     }, 2000);
+                }
+            }
+
+            updateUI() {
+                document.getElementById('score-display').innerText = this.score.toString().padStart(6,'0');
+                document.getElementById('lines-display').innerText = this.lines.toString().padStart(3,'0');
+                document.getElementById('level-display').innerText = this.level.toString().padStart(2,'0');
+            }
+            
+            updateMiniScreens() {
+                document.getElementById('next-preview').innerHTML = this.nextType || "";
+                // Implementing full mini renderers is expensive line-wise, simpler text/css blocks for now
+                // Or better: Use simple CSS blocks inside the divs
+                const drawMini = (div, type) => {
+                    div.innerHTML = '';
+                    if(!type) return;
+                    const mat = {I:4, O:2, T:3, S:3, Z:3, J:3, L:3}[type];
+                    // CSS Grid
+                    const grid = document.createElement('div');
+                    grid.style.display = 'grid';
+                    grid.style.gridTemplateColumns = `repeat(${type=='I'||type=='O'? (type=='I'?4:2) : 3}, 10px)`;
+                    grid.style.gap = '1px';
+                    
+                    const def = {
+                        I: [1,1,1,1], O:[1,1,1,1], T:[0,1,0,1,1,1], S:[0,1,1,1,1,0], Z:[1,1,0,0,1,1], J:[1,0,0,1,1,1], L:[0,0,1,1,1,1]
+                    }[type];
+                    
+                    def.forEach(b => {
+                        const cell = document.createElement('div');
+                        cell.style.width = '10px'; cell.style.height = '10px';
+                        cell.style.backgroundColor = b ? THEME[type].color : 'transparent';
+                        if(b) cell.style.boxShadow = "inset 1px 1px 0 rgba(255,255,255,0.5)";
+                        grid.appendChild(cell);
+                    });
+                    div.appendChild(grid);
+                };
+                drawMini(document.getElementById('next-preview'), this.nextType);
+                drawMini(document.getElementById('hold-preview'), this.holdType);
+            }
+
+            // Input Handling
+            onKey(e, isDown) {
+                if(this.state === 'TITLE' && isDown) {
+                    this.idleTime = 0; 
+                    // Allow starting immediately if key is pressed or AI is running
+                    if(this.aiEnabled || e.code === 'Enter' || e.code === 'Space' || 
+                       e.code.startsWith('Arrow') || e.code === 'KeyZ') {
+                        this.startGame();
+                    }
+                    return;
+                }
+                
+                if(this.state !== 'PLAYING' || this.aiEnabled) return;
+
+                if(isDown) {
+                    if(!this.keys[e.code]) {
+                        this.keys[e.code] = true;
+                        this.handleInput(e.code);
+                        // DAS Setup
+                        if(['ArrowLeft','ArrowRight'].includes(e.code)) {
+                             this.dasTimer = setTimeout(() => {
+                                 this.keys[e.code + '_ARR'] = setInterval(() => this.handleInput(e.code), CONFIG.ARR);
+                             }, CONFIG.DAS);
+                        }
+                    }
+                } else {
+                    this.keys[e.code] = false;
+                    clearTimeout(this.dasTimer);
+                    clearInterval(this.keys[e.code + '_ARR']);
+                }
+            }
+
+            handleInput(code) {
+                switch(code) {
+                    case 'ArrowLeft': this.move(-1); break;
+                    case 'ArrowRight': this.move(1); break;
+                    case 'ArrowUp': this.rotate(1); break;
+                    case 'KeyZ': this.rotate(-1); break;
+                    case 'ArrowDown': this.drop(true); break;
+                    case 'Space': this.hardDrop(); break;
+                    case 'KeyC': 
+                        if(!this.hasHeld) {
+                            if(this.holdType) {
+                                const temp = this.holdType;
+                                this.holdType = this.piece.type;
+                                this.nextType = temp; // Swap back to queue essentially, simplifed
+                                this.spawn(); // Will pick up nextType
+                            } else {
+                                this.holdType = this.piece.type;
+                                this.spawn();
+                            }
+                            this.hasHeld = true;
+                            this.updateMiniScreens();
+                            this.audio.speak("Hold");
+                        }
+                        break;
+                }
+            }
+
+            loop(time) {
+                const dt = time - this.lastTime;
+                this.lastTime = time;
+
+                if(this.state === 'TITLE') {
+                    this.idleTime += dt;
+                    if(this.idleTime > CONFIG.ATTRACT_TIMEOUT && !this.aiEnabled) {
+                        this.startAttractMode();
+                    }
+                }
+
+                if(this.state === 'PLAYING') {
+                    if(this.aiEnabled) this.updateAI(dt);
+                    
+                    // Gravity
+                    const speed = Math.max(50, CONFIG.GRAVITY_BASE - (this.level * 50));
+                    this.dropTimer += dt;
+                    if(this.dropTimer > speed) {
+                        this.drop(false);
+                        this.dropTimer = 0;
+                    }
+                    
+                    this.renderer.updateActivePiece(this.piece);
+                    this.renderer.render();
+                } else {
+                    this.renderer.render(); // Just render loop
+                }
+                
+                requestAnimationFrame(this.loop);
+            }
+        }
+
+        // --- BOOT SEQUENCE ---
+        window.onload = () => {
+            const game = new GameEngine();
+        };
+
+    </script>
+</body>
+</html>

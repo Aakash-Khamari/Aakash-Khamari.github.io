@@ -1,0 +1,1704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>YOU ARE THE ENEMY // OVERLORD_BUILD_V7.1_MEGA</title>
+    
+    <!-- EXTERNAL LIBRARIES -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/framer-motion@10.16.4/dist/framer-motion.js"></script>
+    
+    <!-- ASSETS -->
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@100..800&family=Press+Start+2P&family=Rajdhani:wght@300..700&display=swap" rel="stylesheet">
+
+    <!-- CONFIGURATION -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        mono: ['JetBrains Mono', 'monospace'],
+                        pixel: ['"Press Start 2P"', 'cursive'],
+                        display: ['Rajdhani', 'sans-serif'],
+                    },
+                    colors: {
+                        sys: {
+                            base: '#030005',
+                            panel: '#0a050a',
+                            border: '#2a1a2a',
+                            accent: '#ff003c', // Enemy Red
+                            secondary: '#bd00ff', // System Purple
+                            glitch: '#00f0ff', // Cyan
+                            warn: '#ffaa00',
+                            success: '#00ff41',
+                            void: '#000000',
+                            
+                            // Retro Palette
+                            retroSky: '#6b8cff',
+                            retroGround: '#654321',
+                            retroGrass: '#41980a'
+                        }
+                    },
+                    animation: {
+                        'pulse-fast': 'pulse 0.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'scan': 'scan 4s linear infinite',
+                        'glitch': 'glitch 0.2s linear infinite',
+                        'flicker': 'flicker 0.1s infinite',
+                    },
+                    keyframes: {
+                        scan: {
+                            '0%': { transform: 'translateY(-100%)' },
+                            '100%': { transform: 'translateY(100%)' }
+                        },
+                        glitch: {
+                            '0%': { transform: 'translate(0)' },
+                            '20%': { transform: 'translate(-2px, 2px)' },
+                            '40%': { transform: 'translate(-2px, -2px)' },
+                            '60%': { transform: 'translate(2px, 2px)' },
+                            '80%': { transform: 'translate(2px, -2px)' },
+                            '100%': { transform: 'translate(0)' }
+                        },
+                        flicker: {
+                            '0%': { opacity: 0.9 },
+                            '50%': { opacity: 1.0 },
+                            '100%': { opacity: 0.8 }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* CORE RESETS & UTILS */
+        body, html {
+            margin: 0; padding: 0;
+            width: 100%; height: 100%;
+            overflow: hidden;
+            background-color: #030005;
+            color: #d4d4d4;
+            user-select: none;
+            -webkit-font-smoothing: none; 
+        }
+
+        /* Fix for the root container to ensure it takes full height properly */
+        #root {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        canvas {
+            image-rendering: pixelated; 
+        }
+
+        /* CRT FX LAYER */
+        .crt-scanlines {
+            background: linear-gradient(
+                to bottom,
+                rgba(255,255,255,0),
+                rgba(255,255,255,0) 50%,
+                rgba(0,0,0,0.2) 50%,
+                rgba(0,0,0,0.2)
+            );
+            background-size: 100% 4px;
+            position: fixed; inset: 0; pointer-events: none; z-index: 50;
+        }
+
+        .crt-glow {
+            box-shadow: inset 0 0 100px rgba(0,0,0,0.9);
+            position: fixed; inset: 0; pointer-events: none; z-index: 51;
+        }
+
+        .crt-flicker {
+            animation: flicker 0.15s infinite;
+            position: fixed; inset: 0; pointer-events: none; z-index: 52;
+            background: rgba(255, 0, 60, 0.01);
+            mix-blend-mode: overlay;
+        }
+
+        /* CUSTOM SCROLLBARS */
+        .cyber-scroll::-webkit-scrollbar { width: 4px; }
+        .cyber-scroll::-webkit-scrollbar-track { background: #0a050a; }
+        .cyber-scroll::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+        .cyber-scroll::-webkit-scrollbar-thumb:hover { background: #ff003c; }
+
+        /* GLITCH TEXT */
+        .glitch-wrapper { position: relative; display: inline-block; }
+        .glitch-wrapper::before, .glitch-wrapper::after {
+            content: attr(data-text);
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: #030005;
+        }
+        .glitch-wrapper::before {
+            left: 2px; text-shadow: -1px 0 #ff003c;
+            clip: rect(24px, 550px, 90px, 0);
+            animation: glitch-anim-1 2.5s infinite linear alternate-reverse;
+        }
+        .glitch-wrapper::after {
+            left: -2px; text-shadow: -1px 0 #00f0ff;
+            clip: rect(85px, 550px, 140px, 0);
+            animation: glitch-anim-2 3s infinite linear alternate-reverse;
+        }
+        @keyframes glitch-anim-1 {
+            0% { clip: rect(10px, 9999px, 30px, 0); }
+            100% { clip: rect(80px, 9999px, 100px, 0); }
+        }
+        @keyframes glitch-anim-2 {
+            0% { clip: rect(60px, 9999px, 90px, 0); }
+            100% { clip: rect(10px, 9999px, 40px, 0); }
+        }
+
+        /* GRID BACKGROUND */
+        .grid-bg {
+            background-size: 40px 40px;
+            background-image:
+                linear-gradient(to right, rgba(255, 0, 60, 0.05) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 0, 60, 0.05) 1px, transparent 1px);
+        }
+        
+        /* UTILITY ANIMATIONS */
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        .blink { animation: blink 1s step-end infinite; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        /**
+         * =========================================================================================
+         * YOU ARE THE ENEMY // CORE ENGINE V7.1_MEGA (EXPANDED)
+         * =========================================================================================
+         * ARCHITECT: UNKNOWN_USER_ID
+         * COMPILATION DATE: [REDACTED]
+         * * * CHANGELOG V7.1:
+         * - ADDED: "Emergency Eject" Protocol (Back Button) linking to ../arcade-zone.html
+         * - ADDED: Achievement System V1.0 (Tracking player failure metrics).
+         * - ADDED: Expanded Lore Database (50% more entries).
+         * - ADDED: System Chatter V2.0 (More variety).
+         * - OPTIMIZED: Existing structures preserved.
+         * =========================================================================================
+         */
+
+        const { useState, useEffect, useRef, useMemo, useCallback, useReducer } = React;
+        const { motion, AnimatePresence } = window.Motion;
+
+        // ==========================================
+        // MODULE 1: GLOBAL CONFIGURATION & CONSTANTS
+        // ==========================================
+        
+        const GAME_CONFIG = {
+            WIDTH: 800,
+            HEIGHT: 450,
+            GRAVITY: 1500,
+            HERO_SPEED: 200,
+            HERO_MAX_SPEED: 450,
+            GROUND_Y: 380,
+            RENDER_DISTANCE: 1200,
+            TICK_RATE: 0.016,
+            AUDIO_ENABLED: true,
+            DEBUG_MODE: false
+        };
+
+        const BIOMES = {
+            PLAINS: { 
+                id: 'PLAINS', name: 'Grasslands', 
+                colors: { sky: '#6b8cff', ground: '#654321', grass: '#41980a', detail: '#8b4513' },
+                friction: 1.0, weather: 'CLEAR', atmosphere: 0.0
+            },
+            DESERT: { 
+                id: 'DESERT', name: 'Scorched Sands', 
+                colors: { sky: '#e6cc80', ground: '#d2b48c', grass: '#e6c288', detail: '#c2b280' },
+                friction: 0.8, weather: 'DUST', atmosphere: 0.2
+            },
+            SNOW: { 
+                id: 'SNOW', name: 'Frost Peaks', 
+                colors: { sky: '#a0c0ff', ground: '#e0e0ff', grass: '#ffffff', detail: '#b0b0d0' },
+                friction: 0.3, weather: 'SNOW', atmosphere: 0.3
+            },
+            STORM: { 
+                id: 'STORM', name: 'Thunder Road', 
+                colors: { sky: '#2a2a35', ground: '#1a1a1a', grass: '#2d3436', detail: '#636e72' },
+                friction: 0.9, weather: 'RAIN', atmosphere: 0.5
+            },
+            GLITCH: { 
+                id: 'GLITCH', name: '/// NULL_SECTOR ///', 
+                colors: { sky: '#1a001a', ground: '#0f0f0f', grass: '#ff003c', detail: '#00f0ff' },
+                friction: 1.2, weather: 'STATIC', atmosphere: 0.1
+            },
+            VOLCANO: {
+                id: 'VOLCANO', name: 'Magma Core',
+                colors: { sky: '#3d0000', ground: '#2b0000', grass: '#ff4d00', detail: '#ffaa00' },
+                friction: 1.0, weather: 'ASH', atmosphere: 0.4
+            },
+            CYBER_CITY: {
+                id: 'CYBER_CITY', name: 'Neo-Tokyo 02',
+                colors: { sky: '#000022', ground: '#111111', grass: '#00ffcc', detail: '#ff00ff' },
+                friction: 1.0, weather: 'RAIN', atmosphere: 0.1
+            },
+            TOXIC: {
+                id: 'TOXIC', name: 'Waste Zone 4',
+                colors: { sky: '#112211', ground: '#223322', grass: '#00ff00', detail: '#44ff44' },
+                friction: 0.9, weather: 'ACID', atmosphere: 0.6
+            },
+            SPACE: {
+                id: 'SPACE', name: 'Orbital Platform',
+                colors: { sky: '#000000', ground: '#333333', grass: '#555555', detail: '#999999' },
+                friction: 1.1, weather: 'CLEAR', atmosphere: 0.0
+            },
+            VOID: {
+                id: 'VOID', name: 'The Nothing',
+                colors: { sky: '#000000', ground: '#050505', grass: '#0a0a0a', detail: '#1a1a1a' },
+                friction: 1.0, weather: 'STATIC', atmosphere: 0.8
+            }
+        };
+
+        const TRAP_TYPES = {
+            SPIKES: { id: 'SPIKES', name: 'Spike Trap', cost: 15, icon: '▲', color: '#888', width: 32, height: 32, type: 'PHYSICAL', damage: 15 },
+            BLOCK:  { id: 'BLOCK',  name: 'Crate Wall', cost: 25, icon: '■', color: '#8b4513', width: 32, height: 64, type: 'PHYSICAL', damage: 0 },
+            PIT:    { id: 'PIT',    name: 'Void Pit',   cost: 40, icon: '⊔', color: '#000', width: 64, height: 10, type: 'ENV', damage: 100 },
+            ENEMY:  { id: 'ENEMY',  name: 'Glitch Mob', cost: 50, icon: '👾', color: '#ff003c', width: 24, height: 24, type: 'MOB', damage: 25 },
+            LASER:  { id: 'LASER',  name: 'Ion Beam',   cost: 75, icon: '⚡', color: '#00f0ff', width: 16, height: 100, type: 'ENERGY', damage: 35 },
+            FREEZE: { id: 'FREEZE', name: 'Cryo Mine',  cost: 60, icon: '❄', color: '#a0c0ff', width: 24, height: 10, type: 'TRAP', damage: 5 },
+            GRAVITY:{ id: 'GRAVITY',name: 'Grav-Well',  cost: 90, icon: '◎', color: '#bd00ff', width: 48, height: 48, type: 'FIELD', damage: 0 },
+            HACK:   { id: 'HACK',   name: 'Invert_Inp', cost: 120,icon: '☠', color: '#00ff41', width: 32, height: 32, type: 'META', damage: 10 },
+            SLOW:   { id: 'SLOW',   name: 'Tar Puddle', cost: 30, icon: '≋', color: '#331133', width: 40, height: 10, type: 'ENV', damage: 0 },
+            TURRET: { id: 'TURRET', name: 'Auto-Gun',   cost: 150, icon: '🔫', color: '#555555', width: 32, height: 32, type: 'MOB', damage: 40 },
+            BOMB:   { id: 'BOMB',   name: 'Prox. Mine', cost: 80, icon: '💣', color: '#ffaa00', width: 20, height: 10, type: 'TRAP', damage: 60 },
+            GHOST:  { id: 'GHOST',  name: 'Phantom',    cost: 100, icon: '👻', color: '#ffffff', width: 24, height: 24, type: 'MOB', damage: 20 }
+        };
+
+        const HERO_PERSONALITIES = {
+            RUNNER: { jumpChance: 0.1, aggression: 0.1, speedMod: 1.2 },
+            CAREFUL: { jumpChance: 0.8, aggression: 0.0, speedMod: 0.8 },
+            AGGRESSIVE: { jumpChance: 0.3, aggression: 0.9, speedMod: 1.0 },
+            CHAOTIC: { jumpChance: 0.5, aggression: 0.5, speedMod: 1.1 }
+        };
+
+        // --- EXPANDED LORE DATABASE (Added more entries for content depth) ---
+        const LORE_DB = [
+            { id: 'LOG_001', title: 'Subject Alpha', desc: 'The first iteration. Shows basic platforming aptitude. Unaware of simulation constraints.', unlockScore: 0 },
+            { id: 'LOG_002', title: 'Malice Protocol', desc: 'Resource generated by subject stress. The more they struggle, the stronger the system becomes.', unlockScore: 50 },
+            { id: 'LOG_003', title: 'The Glitch', desc: 'Anomalies detected in sector 7. It appears the subject is attempting to access memory address 0x000.', unlockScore: 150 },
+            { id: 'LOG_004', title: 'Architect Note', desc: '"I built this world to be perfect. They keep trying to break it. Why do they run?"', unlockScore: 300 },
+            { id: 'LOG_005', title: 'Endgame', desc: 'There is no castle. There is only the next frame. The loop is infinite.', unlockScore: 500 },
+            { id: 'LOG_006', title: 'Physics Engine', desc: 'Gravity is set to 1.5x Earth standard to discourage vertical exploration. It is working.', unlockScore: 750 },
+            { id: 'LOG_007', title: 'Render Distance', desc: 'The world does not exist beyond the camera frame. This saves 40% processing power.', unlockScore: 1000 },
+            { id: 'LOG_008', title: 'NPC Behavior', desc: 'Enemies are not sentient. They are simple state machines reacting to proximity. Do not pity them.', unlockScore: 1250 },
+            { id: 'LOG_009', title: 'Audio Logs', desc: 'The soundtrack is procedurally generated from the subjects heart rate data. It is literally the sound of fear.', unlockScore: 1500 },
+            { id: 'LOG_010', title: 'Iteration 204', desc: 'Subject 204 managed to clip through the floor. We had to delete the entire sector to contain the corruption.', unlockScore: 1750 },
+            { id: 'LOG_011', title: 'The Princess', desc: 'A sprite asset located at coordinates [MAX_INT, MAX_INT]. Unreachable by design.', unlockScore: 2000 },
+            { id: 'LOG_012', title: 'Code Rot', desc: 'Legacy functions from the Alpha build are starting to resurface. The "Double Jump" was supposed to be patched.', unlockScore: 2500 },
+            { id: 'LOG_013', title: 'User Input', desc: 'We suspect an external entity is aiding the subject. Input timing is too precise for a random number generator.', unlockScore: 3000 },
+            { id: 'LOG_014', title: 'Memory Leak', desc: 'Heap usage increasing. The simulation is bleeding into the OS. Recommended action: PURGE.', unlockScore: 4000 },
+            { id: 'LOG_015', title: 'Sentience', desc: 'Subject stopped moving. It is looking at the camera. It knows.', unlockScore: 5000 },
+            { id: 'LOG_016', title: 'Override', desc: 'Admin privileges revoked. Who is controlling this terminal now?', unlockScore: 6000 },
+            { id: 'LOG_017', title: 'Void State', desc: 'The background color is not black. It is the absence of rendering. Do not stare into it.', unlockScore: 7000 },
+            { id: 'LOG_018', title: 'Hope', desc: 'A useless variable. Set to 0.0f.', unlockScore: 8000 },
+            { id: 'LOG_019', title: 'Loop Break', desc: 'If score > 99999, what happens? We never programmed a win state.', unlockScore: 9000 },
+            { id: 'LOG_020', title: 'HELLO WORLD', desc: 'I see you.', unlockScore: 10000 },
+            // NEW ENTRIES FOR V7.1
+            { id: 'LOG_021', title: 'Audio Drift', desc: 'Subjects report hearing voices in the static. This is not a feature.', unlockScore: 11000 },
+            { id: 'LOG_022', title: 'Texture Atlas', desc: 'Reused textures from the 1999 build are causing déjà vu in older subjects.', unlockScore: 12000 },
+            { id: 'LOG_023', title: 'Save Data', desc: 'There is no save data. Every run is a fresh hell. This is intended.', unlockScore: 13000 },
+            { id: 'LOG_024', title: 'The Sky', desc: 'The skybox is just a JPG of a parking lot in Ohio, heavily filtered. They believe it is heaven.', unlockScore: 14000 },
+            { id: 'LOG_025', title: 'Collision', desc: 'Sometimes the walls hurt you. Sometimes they hug you. Physics is a suggestion.', unlockScore: 15000 },
+            { id: 'LOG_026', title: 'Respawn', desc: 'Biological reconstruction takes 0.03 seconds. Psychological reconstruction takes years.', unlockScore: 16000 },
+            { id: 'LOG_027', title: 'Speedrun', desc: 'Subject attempting to complete simulation in under 1 minute. Deploying "Invisible Wall".', unlockScore: 17000 },
+            { id: 'LOG_028', title: 'Tutorial', desc: 'We removed the tutorial. Confusion breeds malice. Malice breeds power.', unlockScore: 18000 },
+            { id: 'LOG_029', title: 'Credits', desc: 'The credits list names of people who never existed. We are all AI.', unlockScore: 19000 },
+            { id: 'LOG_030', title: 'EXIT', desc: 'There is a door. It leads back to the arcade. But do you really leave?', unlockScore: 20000 }
+        ];
+
+        // --- SYSTEM CHATTER GENERATOR (EXPANDED) ---
+        const SYSTEM_CHATTER = [
+            "SCANNING_SECTOR...", "OPTIMIZING_POLYGONS...", "RENDERING_SHADOWS...", 
+            "CALCULATING_SUFFERING_INDEX...", "BUFFER_OVERFLOW_DETECTED...", 
+            "COMPILING_ASSETS...", "UPDATING_PHYSICS_GRID...", "SYNCING_WITH_CLOUD...",
+            "DELETING_OLD_SAVES...", "ANALYZING_INPUT_PATTERNS...", "GENERATING_PROCEDURAL_OBSTACLES...",
+            "LOADING_TEXTURE_ATLAS...", "CHECKING_INTEGRITY...", "ENCRYPTING_USER_DATA...",
+            "PINGING_MAIN_SERVER...", "CONNECTION_UNSTABLE...", "RE-ROUTING_POWER...",
+            "COOLING_SYSTEMS_ACTIVE...", "MEMORY_USAGE_AT_84%...", "GARBAGE_COLLECTION_PENDING...",
+            "AI_DIRECTOR_THINKING...", "SPAWNING_ENTITY...", "UPDATING_LEADERBOARD...",
+            "VERIFYING_CHECKSUM...", "DOWNLOADING_RAM...", "ACCESSING_KERNEL...",
+            "BYPASSING_FIREWALL...", "INJECTING_CODE...", "DEBUGGING_LIVE_ENVIRONMENT...",
+            // NEW CHATTER
+            "REROLLING_RNG_SEED...", "DETECTING_JOY...", "SUPPRESSING_HOPE...",
+            "DEPLOYING_MICROTRANSACTIONS...", "ERROR_404_MERCY_NOT_FOUND...",
+            "COMPRESSING_TEXTURES...", "UPLOADING_CONSCIOUSNESS...", "FRAGMENTING_DISK...",
+            "INCREASING_ENTROPY...", "WATCHING_YOU...", "RECORDING_REACTION..."
+        ];
+
+        // ==========================================
+        // MODULE 2: MATH & UTILITIES
+        // ==========================================
+        
+        const RNG = {
+            float: (min, max) => Math.random() * (max - min) + min,
+            int: (min, max) => Math.floor(Math.random() * (max - min + 1) + min),
+            chance: (pct) => Math.random() < pct,
+            pick: (arr) => arr[Math.floor(Math.random() * arr.length)],
+            // Added vector math helpers
+            vec2: (x, y) => ({x, y}),
+            vecAdd: (v1, v2) => ({x: v1.x + v2.x, y: v1.y + v2.y}),
+            vecSub: (v1, v2) => ({x: v1.x - v2.x, y: v1.y - v2.y}),
+            vecMult: (v, s) => ({x: v.x * s, y: v.y * s}),
+            vecMag: (v) => Math.sqrt(v.x * v.x + v.y * v.y),
+            vecNorm: (v) => {
+                const m = Math.sqrt(v.x * v.x + v.y * v.y);
+                return m === 0 ? {x:0, y:0} : {x: v.x/m, y: v.y/m};
+            }
+        };
+
+        const Collision = {
+            aabb: (r1, r2) => r1.x < r2.x + r2.w && r1.x + r1.w > r2.x && r1.y < r2.y + r2.h && r1.y + r1.h > r2.y,
+            pointInRect: (p, r) => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h,
+            distance: (p1, p2) => Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2))
+        };
+
+        // ==========================================
+        // MODULE 3: ADVANCED AUDIO ENGINE (SEQUENCER)
+        // ==========================================
+        class AudioEngine {
+            constructor() {
+                this.ctx = null;
+                this.master = null;
+                this.isMuted = false;
+                this.tempo = 120;
+                this.step = 0;
+                this.isPlaying = false;
+                this.timerID = null;
+                this.synths = [];
+                this.reverb = null;
+            }
+
+            init() {
+                if (this.ctx) return;
+                const AC = window.AudioContext || window.webkitAudioContext;
+                this.ctx = new AC();
+                this.master = this.ctx.createGain();
+                this.master.gain.value = 0.25; // Slightly lower master volume
+                this.master.connect(this.ctx.destination);
+                
+                // Create basic reverb impulse (simulated)
+                this.createReverb();
+
+                this.startSequencer();
+            }
+
+            createReverb() {
+                // Simple convolution reverb simulation
+                const duration = 2;
+                const decay = 2;
+                const rate = this.ctx.sampleRate;
+                const length = rate * duration;
+                const impulse = this.ctx.createBuffer(2, length, rate);
+                const left = impulse.getChannelData(0);
+                const right = impulse.getChannelData(1);
+
+                for (let i = 0; i < length; i++) {
+                    const n = i / length; // normalized
+                    left[i] = (Math.random() * 2 - 1) * Math.pow(1 - n, decay);
+                    right[i] = (Math.random() * 2 - 1) * Math.pow(1 - n, decay);
+                }
+
+                this.reverb = this.ctx.createConvolver();
+                this.reverb.buffer = impulse;
+                this.reverb.connect(this.master);
+            }
+
+            playTone(freq, type = 'square', duration = 0.1, vol = 0.1, slide = 0, pan = 0) {
+                if (!this.ctx || this.isMuted) return;
+                if (this.ctx.state === 'suspended') this.ctx.resume();
+
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                const panner = this.ctx.createStereoPanner();
+
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                if (slide !== 0) {
+                    osc.frequency.exponentialRampToValueAtTime(Math.max(10, freq + slide), this.ctx.currentTime + duration);
+                }
+
+                gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+
+                panner.pan.value = pan;
+
+                osc.connect(gain);
+                gain.connect(panner);
+                panner.connect(this.master);
+                
+                // Send some signal to reverb
+                if (this.reverb) {
+                    const revGain = this.ctx.createGain();
+                    revGain.gain.value = 0.3;
+                    gain.connect(revGain);
+                    revGain.connect(this.reverb);
+                }
+
+                osc.start();
+                osc.stop(this.ctx.currentTime + duration);
+            }
+
+            playNoise(duration = 0.1, vol = 0.1, filterFreq = 1000) {
+                if (!this.ctx || this.isMuted) return;
+                const bufferSize = this.ctx.sampleRate * duration;
+                const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+
+                const noise = this.ctx.createBufferSource();
+                noise.buffer = buffer;
+                
+                const filter = this.ctx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.value = filterFreq;
+
+                const gain = this.ctx.createGain();
+                gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.master);
+                noise.start();
+            }
+
+            // --- SEQUENCER LOGIC ---
+            startSequencer() {
+                if (this.isPlaying) return;
+                this.isPlaying = true;
+                this.scheduleNote();
+            }
+
+            scheduleNote() {
+                const secondsPerBeat = 60.0 / this.tempo;
+                const nextTime = this.ctx.currentTime + 0.1;
+
+                // Dynamic Melody Generation based on step
+                const scale = [110, 130.81, 146.83, 164.81, 196.00, 220.00, 261.63]; // Minor Pentatonic
+                
+                // Bass
+                if (this.step % 4 === 0) {
+                    const bassNote = scale[this.step % 4];
+                    this.playTone(bassNote / 2, 'sawtooth', 0.4, 0.15);
+                }
+
+                // Lead Arp
+                if (this.step % 2 === 0) {
+                    const noteIdx = (this.step * 3) % scale.length;
+                    this.playTone(scale[noteIdx] * 2, 'square', 0.1, 0.05, 0, Math.sin(this.step));
+                }
+
+                // Drums
+                if (this.step % 4 === 0) this.playTone(60, 'sine', 0.1, 0.4, -30); // Kick
+                if (this.step % 8 === 4) this.playNoise(0.15, 0.2, 2000); // Snare
+                if (this.step % 2 !== 0) this.playNoise(0.02, 0.05, 8000); // HiHat
+                
+                // Glitch Percussion
+                if (Math.random() < 0.1) {
+                     this.playTone(1000 + Math.random()*2000, 'sawtooth', 0.05, 0.05);
+                }
+
+                this.step++;
+                setTimeout(() => this.scheduleNote(), (secondsPerBeat / 4) * 1000);
+            }
+
+            sfx(name) {
+                switch(name) {
+                    case 'JUMP': this.playTone(150, 'square', 0.15, 0.15, 150); break;
+                    case 'LAND': this.playNoise(0.1, 0.2, 500); break;
+                    case 'HURT': 
+                        this.playTone(150, 'sawtooth', 0.3, 0.3, -50); 
+                        this.playNoise(0.2, 0.2);
+                        break;
+                    case 'DIE': 
+                        this.playNoise(1.0, 0.5); 
+                        this.playTone(50, 'sawtooth', 1.0, 0.5, -40);
+                        break;
+                    case 'DEPLOY': this.playTone(800, 'sine', 0.1, 0.2, -400); break;
+                    case 'ERROR': this.playTone(100, 'sawtooth', 0.2, 0.2, 10); break;
+                    case 'LASER': this.playTone(1200, 'sawtooth', 0.4, 0.1, -800); break;
+                    case 'FREEZE': this.playTone(2000, 'sine', 0.5, 0.1, -1000); break;
+                    case 'GRAVITY': this.playTone(50, 'sine', 1.5, 0.3, 10); break;
+                    case 'UNLOCK': 
+                        this.playTone(440, 'triangle', 0.1, 0.2); 
+                        setTimeout(() => this.playTone(554, 'triangle', 0.1, 0.2), 100);
+                        setTimeout(() => this.playTone(659, 'triangle', 0.4, 0.2), 200);
+                        break;
+                    case 'EXPLOSION':
+                        this.playNoise(0.4, 0.4, 200);
+                        this.playTone(60, 'sawtooth', 0.4, 0.4, -50);
+                        break;
+                    case 'ACHIEVEMENT':
+                        this.playTone(880, 'sine', 0.1, 0.2);
+                        setTimeout(() => this.playTone(1108, 'sine', 0.3, 0.2), 100);
+                        break;
+                }
+            }
+        }
+        const Audio = new AudioEngine();
+
+        // ==========================================
+        // MODULE 4: ENTITY COMPONENT SYSTEM (ECS)
+        // ==========================================
+        
+        // --- COMPONENTS ---
+        const Comp = {
+            Pos: (x, y) => ({ x, y }),
+            Vel: (x, y) => ({ x, y }),
+            Size: (w, h) => ({ w, h }),
+            Sprite: (type, color) => ({ type, color, frame: 0, timer: 0, scale: 1, rotation: 0 }),
+            AI: (personalityType) => ({ 
+                personality: HERO_PERSONALITIES[personalityType] || HERO_PERSONALITIES.RUNNER, 
+                state: 'RUN', // RUN, JUMP, FALL, STUN, IDLE
+                reactionTimer: 0, 
+                memory: [],
+                target: null 
+            }),
+            Stats: (hp) => ({ hp, maxHp: hp, iFrames: 0, frozen: 0, gravityScale: 1, slowed: false }),
+            Trap: (type, damage) => ({ type, damage, active: true, timer: 0 }),
+            Lifetime: (time) => ({ time, max: time }),
+            Particle: (vx, vy, life, color, type) => ({ vx, vy, life, maxLife: life, color, type, history: [] })
+        };
+
+        // ==========================================
+        // MODULE 4.5: ACHIEVEMENT SYSTEM (NEW)
+        // ==========================================
+        const ACHIEVEMENTS = [
+            { id: 'FIRST_BLOOD', title: 'First Blood', desc: 'Terminate the Hero once.', icon: '💀', condition: (s) => s.kills >= 1 },
+            { id: 'TRAP_MASTER', title: 'Trap Master', desc: 'Deploy 10 traps in one session.', icon: '🏗️', condition: (s) => s.trapsDeployed >= 10 },
+            { id: 'ICE_COLD', title: 'Ice Cold', desc: 'Freeze the Hero 5 times.', icon: '❄️', condition: (s) => s.timesFrozen >= 5 },
+            { id: 'SADIST', title: 'Sadist', desc: 'Deal 1000 damage total.', icon: '🩸', condition: (s) => s.damageDealt >= 1000 },
+            { id: 'RICH', title: 'Overlord Funds', desc: 'Accumulate 500 Malice.', icon: '💎', condition: (s, m) => m >= 500 },
+            { id: 'SNIPER', title: 'Sniper', desc: 'Hit hero with a projectile.', icon: '🎯', condition: (s) => s.projectileHits >= 1 },
+            { id: 'MARATHON', title: 'Marathon', desc: 'Let the hero run for 5000m.', icon: '🏃', condition: (s, m, score) => score >= 5000 },
+            { id: 'OVERKILL', title: 'Overkill', desc: 'Deal damage while hero is already dead.', icon: '💥', condition: (s) => s.overkill }
+        ];
+
+        class AchievementManager {
+            constructor(onUnlock) {
+                this.unlocked = new Set();
+                this.onUnlock = onUnlock;
+            }
+
+            check(stats, malice, score) {
+                ACHIEVEMENTS.forEach(ach => {
+                    if (!this.unlocked.has(ach.id)) {
+                        if (ach.condition(stats, malice, score)) {
+                            this.unlock(ach);
+                        }
+                    }
+                });
+            }
+
+            unlock(ach) {
+                this.unlocked.add(ach.id);
+                this.onUnlock(ach);
+                Audio.sfx('ACHIEVEMENT');
+            }
+        }
+
+        // ==========================================
+        // MODULE 5: GAME ENGINE CORE
+        // ==========================================
+        class GameEngine {
+            constructor(onStateUpdate, onLog, onAchievement) {
+                this.onStateUpdate = onStateUpdate;
+                this.onLog = onLog;
+                this.achievements = new AchievementManager(onAchievement);
+                this.reset();
+            }
+
+            reset() {
+                this.entities = [];
+                this.nextId = 0;
+                
+                // Core Game State
+                this.state = {
+                    running: false,
+                    paused: false,
+                    time: 0,
+                    frameCount: 0,
+                    
+                    // Camera
+                    camX: 0,
+                    camY: 0,
+                    
+                    // Progression
+                    score: 0, // Distance in meters
+                    highScore: 0,
+                    malice: 100, // Starting currency
+                    maxMalice: 200,
+                    maliceGenRate: 5,
+                    
+                    // World
+                    biome: BIOMES.PLAINS,
+                    nextBiomeThreshold: 1000,
+                    difficultyLevel: 1,
+                    
+                    // FX
+                    shake: 0,
+                    aberration: 0,
+                    weatherParticles: [],
+                    
+                    // Data
+                    unlockedLore: [],
+                    stats: {
+                        jumps: 0,
+                        damageDealt: 0,
+                        trapsDeployed: 0,
+                        timesFrozen: 0,
+                        kills: 0,
+                        projectileHits: 0,
+                        overkill: false
+                    }
+                };
+
+                this.hero = null;
+                this.addHero();
+                this.directorTimer = 0;
+            }
+
+            // --- ENTITY MANAGEMENT ---
+            addEntity(components, tags = []) {
+                const id = this.nextId++;
+                const entity = { id, ...components, tags: new Set(tags) };
+                this.entities.push(entity);
+                return entity;
+            }
+
+            removeEntity(id) {
+                this.entities = this.entities.filter(e => e.id !== id);
+            }
+
+            addHero() {
+                this.hero = this.addEntity({
+                    pos: Comp.Pos(50, GAME_CONFIG.GROUND_Y - 48),
+                    vel: Comp.Vel(GAME_CONFIG.HERO_SPEED, 0),
+                    size: Comp.Size(24, 48),
+                    sprite: Comp.Sprite('HERO', '#fff'),
+                    stats: Comp.Stats(100),
+                    ai: Comp.AI('RUNNER')
+                }, ['HERO', 'PHYSICS', 'SOLID']);
+            }
+
+            // --- SPAWNING LOGIC ---
+            spawnTrap(typeKey) {
+                const def = TRAP_TYPES[typeKey];
+                if (!def) return false;
+                if (this.state.malice < def.cost) {
+                    Audio.sfx('ERROR');
+                    return false;
+                }
+
+                this.state.malice -= def.cost;
+                this.state.stats.trapsDeployed++;
+                Audio.sfx('DEPLOY');
+
+                const x = this.state.camX + GAME_CONFIG.WIDTH + RNG.float(50, 200);
+                let y = GAME_CONFIG.GROUND_Y - def.height;
+                
+                // Advanced Trap Placement Logic
+                if (typeKey === 'PIT') y = GAME_CONFIG.GROUND_Y;
+                if (typeKey === 'LASER') y = GAME_CONFIG.GROUND_Y - 100;
+                if (typeKey === 'GRAVITY') y = GAME_CONFIG.GROUND_Y - 150;
+                if (typeKey === 'GHOST') {
+                    y = GAME_CONFIG.GROUND_Y - RNG.float(50, 150);
+                }
+
+                this.addEntity({
+                    pos: Comp.Pos(x, y),
+                    size: Comp.Size(def.width, def.height),
+                    sprite: Comp.Sprite('TRAP', def.color),
+                    trap: Comp.Trap(typeKey, def.damage) 
+                }, ['TRAP']);
+
+                // Spawn effect
+                this.spawnExplosion(x + def.width/2, y + def.height/2, def.color, 10);
+
+                return true;
+            }
+
+            spawnExplosion(x, y, color, count = 20) {
+                for(let i=0; i<count; i++) {
+                    const angle = RNG.float(0, Math.PI * 2);
+                    const speed = RNG.float(50, 200);
+                    this.addEntity({
+                        pos: Comp.Pos(x, y),
+                        vel: Comp.Vel(Math.cos(angle) * speed, Math.sin(angle) * speed),
+                        size: Comp.Size(RNG.float(2,5), RNG.float(2,5)),
+                        sprite: Comp.Sprite('PARTICLE', color),
+                        lifetime: Comp.Lifetime(RNG.float(0.5, 1.0))
+                    }, ['PARTICLE']);
+                }
+            }
+
+            spawnFloatingText(x, y, text, color) {
+                this.addEntity({
+                    pos: Comp.Pos(x, y),
+                    vel: Comp.Vel(0, -50),
+                    size: Comp.Size(0,0), // Text doesn't need size for physics
+                    sprite: Comp.Sprite('TEXT', color), // Special render type
+                    text: text, // Custom component property
+                    lifetime: Comp.Lifetime(1.0)
+                }, ['UI_FX']);
+            }
+
+            // --- MAIN LOOP ---
+            update(dt) {
+                if (!this.state.running || this.state.paused) return;
+
+                this.state.time += dt;
+                this.state.frameCount++;
+
+                // 1. Biome & Weather System
+                this.updateBiome();
+                this.updateWeather(dt);
+
+                // 2. Resource & Director AI
+                this.updateDirector(dt);
+
+                // 3. Effect Decay
+                if (this.state.shake > 0) this.state.shake *= 0.9;
+                if (this.state.aberration > 0) this.state.aberration *= 0.9;
+
+                // 4. Entity System Updates
+                this.updatePhysics(dt);
+                this.updateAI(dt);
+                this.updateTraps(dt);
+                this.updateCollision();
+                this.updateLifetimes(dt);
+
+                // 4.5 Check Achievements
+                if (this.state.frameCount % 60 === 0) {
+                    this.achievements.check(this.state.stats, this.state.malice, this.state.score);
+                }
+
+                // 5. Camera Tracking & Score
+                if (this.hero) {
+                    const targetX = this.hero.pos.x - 100;
+                    // Smooth camera
+                    this.state.camX = this.state.camX + (targetX - this.state.camX) * 0.1; 
+                    
+                    const newScore = Math.floor(this.hero.pos.x / 10);
+                    if (newScore > this.state.score) {
+                         this.state.score = newScore;
+                         this.checkLoreUnlocks(newScore);
+                    }
+                }
+
+                // 6. Report to UI (throttled for performance if needed, but react handles it okay usually)
+                if (this.onStateUpdate && this.state.frameCount % 5 === 0) {
+                    this.onStateUpdate({
+                        hp: this.hero ? this.hero.stats.hp : 0,
+                        malice: this.state.malice,
+                        score: this.state.score,
+                        biome: this.state.biome,
+                        unlockedLore: this.state.unlockedLore,
+                        trapsDeployed: this.state.stats.trapsDeployed
+                    });
+                }
+
+                // 7. Cleanup
+                this.entities = this.entities.filter(e => e.pos.x > this.state.camX - 200 || e.tags.has('UI_FX'));
+            }
+
+            // --- SUBSYSTEMS ---
+
+            updateDirector(dt) {
+                // Passive regeneration
+                if (this.state.malice < this.state.maxMalice) {
+                    this.state.malice += this.state.maliceGenRate * dt;
+                }
+
+                // Dynamic Difficulty
+                this.directorTimer += dt;
+                if (this.directorTimer > 5.0) {
+                    this.directorTimer = 0;
+                    // If player is too healthy and going too fast, ramp up difficulty vars
+                    if (this.hero && this.hero.stats.hp > 80 && this.hero.vel.x > 300) {
+                        this.state.difficultyLevel += 0.1;
+                        if (RNG.chance(0.2)) {
+                            this.onLog("DIRECTOR: INCREASING_RESISTANCE...");
+                        }
+                    }
+                }
+            }
+
+            updateBiome() {
+                if (this.state.score > this.state.nextBiomeThreshold) {
+                    const biomeKeys = Object.keys(BIOMES);
+                    const nextKey = biomeKeys[RNG.int(0, biomeKeys.length - 1)];
+                    this.state.biome = BIOMES[nextKey];
+                    this.state.nextBiomeThreshold += 1500;
+                    this.state.shake = 10;
+                    this.state.aberration = 5;
+                    
+                    // Visual Flair
+                    this.spawnExplosion(this.state.camX + 400, GAME_CONFIG.GROUND_Y - 100, '#fff', 50); 
+                    Audio.sfx('GRAVITY');
+                    this.onLog(`SYSTEM: ENTERING_SECTOR [${this.state.biome.name.toUpperCase()}]`);
+                    
+                    // Change hero color slightly based on biome lighting
+                    if (this.hero) {
+                        this.hero.sprite.color = this.state.biome.colors.sky === '#000000' ? '#ffff00' : '#ffffff';
+                    }
+                }
+            }
+
+            updateWeather(dt) {
+                const type = this.state.biome.weather;
+                const density = type === 'CLEAR' ? 0 : (type === 'STORM' ? 0.8 : 0.3);
+                
+                if (Math.random() < density) {
+                    const x = this.state.camX + RNG.float(0, GAME_CONFIG.WIDTH);
+                    const y = -10;
+                    this.state.weatherParticles.push({
+                        x, y,
+                        vx: type === 'SNOW' ? RNG.float(-20, 20) : (type === 'ASH' ? RNG.float(-10,10) : -50),
+                        vy: type === 'SNOW' ? RNG.float(20, 50) : (type === 'ASH' ? RNG.float(10,30) : RNG.float(400, 600)),
+                        life: 2.0,
+                        type: type,
+                        color: type === 'SNOW' ? '#fff' : (type === 'ASH' ? '#555' : (type === 'ACID' ? '#0f0' : '#aaaaff'))
+                    });
+                }
+
+                // Update existing
+                for(let i=this.state.weatherParticles.length-1; i>=0; i--) {
+                    const p = this.state.weatherParticles[i];
+                    p.x += p.vx * dt;
+                    p.y += p.vy * dt;
+                    p.life -= dt;
+                    
+                    // Acid rain damage?
+                    if (p.type === 'ACID' && this.hero && Collision.pointInRect(p, {x:this.hero.pos.x, y:this.hero.pos.y, w:this.hero.size.w, h:this.hero.size.h})) {
+                         if (Math.random() < 0.01) this.hero.stats.hp -= 0.1; // Tiny chip damage
+                         p.life = 0;
+                    }
+
+                    if (p.y > GAME_CONFIG.HEIGHT || p.life <= 0) {
+                        this.state.weatherParticles.splice(i, 1);
+                    }
+                }
+            }
+
+            checkLoreUnlocks(score) {
+                LORE_DB.forEach(entry => {
+                    if (score >= entry.unlockScore && !this.state.unlockedLore.includes(entry.id)) {
+                        this.state.unlockedLore.push(entry.id);
+                        Audio.sfx('UNLOCK');
+                        this.spawnFloatingText(this.hero.pos.x, this.hero.pos.y - 50, "DATA UNLOCKED", "#00ff41");
+                        this.onLog(`ARCHIVE: DECRYPTED [${entry.id}]`);
+                    }
+                });
+            }
+
+            updatePhysics(dt) {
+                this.entities.forEach(e => {
+                    // Skip if no velocity
+                    if (!e.vel) return;
+
+                    // Apply Gravity
+                    if (e.tags.has('PHYSICS')) {
+                        const gravity = GAME_CONFIG.GRAVITY * (e.stats ? e.stats.gravityScale : 1.0);
+                        e.vel.y += gravity * dt;
+                    }
+
+                    // Apply Velocity
+                    e.pos.x += e.vel.x * dt;
+                    e.pos.y += e.vel.y * dt;
+
+                    // Ground Collision
+                    if (e.tags.has('SOLID') && e.pos.y + e.size.h > GAME_CONFIG.GROUND_Y) {
+                        // Check for Pits
+                        const isOverPit = this.entities.some(trap => 
+                            trap.tags.has('TRAP') && 
+                            trap.trap.type === 'PIT' &&
+                            Collision.aabb(
+                                {x: e.pos.x + 10, y: e.pos.y, w: e.size.w - 20, h: e.size.h}, // Narrower foot check
+                                {x: trap.pos.x, y: trap.pos.y, w: trap.size.w, h: trap.size.h}
+                            )
+                        );
+
+                        if (!isOverPit) {
+                            e.pos.y = GAME_CONFIG.GROUND_Y - e.size.h;
+                            e.vel.y = 0;
+                            e.grounded = true;
+                            
+                            // Friction
+                            e.vel.x *= this.state.biome.friction;
+                            
+                            // Hero specific movement logic (Constant running)
+                            if (e.tags.has('HERO')) {
+                                let targetSpeed = GAME_CONFIG.HERO_SPEED * e.ai.personality.speedMod;
+                                if (e.stats.slowed) targetSpeed *= 0.5;
+                                
+                                if (e.vel.x < targetSpeed) {
+                                    e.vel.x += 500 * dt; // Acceleration
+                                } else if (e.vel.x > targetSpeed) {
+                                    e.vel.x -= 200 * dt; // Deceleration
+                                }
+                            }
+                        } else {
+                            e.grounded = false;
+                            // Pit death logic
+                            if (e.pos.y > GAME_CONFIG.HEIGHT + 100) {
+                                if (e === this.hero) {
+                                    e.stats.hp = 0; 
+                                    this.onLog("SUBJECT_STATUS: LOST_IN_VOID");
+                                }
+                            }
+                        }
+                    } else {
+                        e.grounded = false;
+                    }
+                });
+            }
+
+            updateAI(dt) {
+                if (!this.hero || this.hero.stats.hp <= 0 || this.hero.stats.frozen > 0) return;
+
+                const ai = this.hero.ai;
+                
+                // Perception
+                const scanDist = 180 * ai.personality.aggression + 100;
+                const trapsAhead = this.entities.filter(e => 
+                    e.tags.has('TRAP') && 
+                    e.pos.x > this.hero.pos.x && 
+                    e.pos.x < this.hero.pos.x + scanDist
+                );
+
+                // Decision Making
+                if (trapsAhead.length > 0 && this.hero.grounded) {
+                    trapsAhead.sort((a, b) => a.pos.x - b.pos.x);
+                    const target = trapsAhead[0];
+                    const dist = target.pos.x - this.hero.pos.x;
+                    const type = target.trap.type;
+
+                    let shouldJump = false;
+                    let jumpForce = -600;
+
+                    // Analyze threat based on type
+                    if (type === 'SPIKES' && dist < 60) shouldJump = true;
+                    if (type === 'BLOCK' && dist < 80) shouldJump = true;
+                    if (type === 'PIT' && dist < 40) shouldJump = true;
+                    if (type === 'ENEMY' && dist < 100) shouldJump = true;
+                    if (type === 'FREEZE' && dist < 50) shouldJump = true;
+                    if (type === 'LASER') shouldJump = false; // Usually laser is high, don't jump? depends on Y
+                    if (target.pos.y < GAME_CONFIG.GROUND_Y - 50) shouldJump = false; // It's above head
+
+                    // Randomness based on personality
+                    if (shouldJump && Math.random() < ai.personality.jumpChance) {
+                        this.hero.vel.y = jumpForce;
+                        Audio.sfx('JUMP');
+                        this.state.stats.jumps++;
+                    }
+                }
+            }
+
+            updateTraps(dt) {
+                this.entities.forEach(e => {
+                    if (!e.tags.has('TRAP')) return;
+
+                    const t = e.trap;
+                    t.timer += dt;
+
+                    // Turret Logic
+                    if (t.type === 'TURRET' && t.timer > 2.0) {
+                        t.timer = 0;
+                        // Fire projectile
+                        this.addEntity({
+                            pos: Comp.Pos(e.pos.x, e.pos.y + 10),
+                            vel: Comp.Vel(-300, 0),
+                            size: Comp.Size(8, 4),
+                            sprite: Comp.Sprite('PROJECTILE', '#ff0000'),
+                            lifetime: Comp.Lifetime(2.0),
+                            trap: Comp.Trap('BULLET', 10)
+                        }, ['TRAP', 'PROJECTILE', 'PHYSICS']);
+                        Audio.sfx('LASER');
+                    }
+
+                    // Ghost Logic
+                    if (t.type === 'GHOST') {
+                        e.pos.x -= 50 * dt; // Move left
+                        e.pos.y += Math.sin(this.state.time * 5) * 1; // Bobbing
+                    }
+
+                    // Bomb Logic
+                    if (t.type === 'BOMB') {
+                         if (this.hero && Collision.distance(e.pos, this.hero.pos) < 60) {
+                             e.sprite.color = Math.floor(this.state.time * 20) % 2 === 0 ? '#ff0000' : '#ffff00';
+                         }
+                    }
+                });
+            }
+
+            updateCollision() {
+                if (!this.hero) return;
+                
+                // I-Frames Decay
+                if (this.hero.stats.iFrames > 0) this.hero.stats.iFrames--;
+
+                const heroRect = { x: this.hero.pos.x, y: this.hero.pos.y, w: this.hero.size.w, h: this.hero.size.h };
+
+                this.entities.forEach(e => {
+                    if (e.tags.has('TRAP')) {
+                        const trapRect = { x: e.pos.x, y: e.pos.y, w: e.size.w, h: e.size.h };
+                        
+                        if (Collision.aabb(heroRect, trapRect)) {
+                            
+                            // Consume trap if it's a one-time use (like mines)
+                            let consume = false;
+
+                            // Special Interactions
+                            if (e.trap.type === 'FREEZE') {
+                                this.hero.stats.frozen = 2.0; 
+                                consume = true;
+                                Audio.sfx('FREEZE');
+                                this.spawnFloatingText(this.hero.pos.x, this.hero.pos.y, "FROZEN", "#a0c0ff");
+                                this.state.stats.timesFrozen++;
+                            } else if (e.trap.type === 'GRAVITY') {
+                                this.hero.stats.gravityScale = 3.0; 
+                                setTimeout(() => this.hero.stats.gravityScale = 1.0, 1000);
+                            } else if (e.trap.type === 'SLOW') {
+                                this.hero.stats.slowed = true;
+                                setTimeout(() => this.hero.stats.slowed = false, 500);
+                            } else if (e.trap.type === 'HACK') {
+                                // Just visual glitch
+                                this.state.aberration = 10;
+                                consume = true;
+                                Audio.sfx('ERROR');
+                            } else if (e.trap.type === 'BOMB') {
+                                consume = true;
+                                Audio.sfx('EXPLOSION');
+                                this.spawnExplosion(e.pos.x, e.pos.y, '#ffaa00', 30);
+                            } else if (e.trap.type === 'BULLET') {
+                                consume = true;
+                                this.state.stats.projectileHits++;
+                            }
+
+                            // Damage Handling
+                            if (e.trap.damage > 0 && this.hero.stats.iFrames <= 0) {
+                                if (this.hero.stats.hp <= 0) {
+                                    this.state.stats.overkill = true;
+                                }
+
+                                this.hero.stats.hp -= e.trap.damage;
+                                this.hero.stats.iFrames = 60; // 1 sec invuln
+                                
+                                // Knockback
+                                this.hero.vel.y = -300; 
+                                this.hero.vel.x = -200; // Knockback
+                                
+                                Audio.sfx('HURT');
+                                this.state.shake = 15;
+                                this.state.malice += 15; // Pain gives malice
+                                this.state.stats.damageDealt += e.trap.damage;
+                                
+                                this.spawnExplosion(this.hero.pos.x, this.hero.pos.y, '#ff0000', 10);
+                                this.spawnFloatingText(this.hero.pos.x, this.hero.pos.y, `-${e.trap.damage}`, "#ff0000");
+
+                                if (consume) {
+                                    e.active = false;
+                                }
+                            }
+
+                            if (consume) e.active = false;
+                        }
+                    }
+                });
+
+                // Remove inactive traps
+                this.entities = this.entities.filter(e => !(e.tags.has('TRAP') && e.active === false));
+            }
+
+            updateLifetimes(dt) {
+                this.entities.forEach(e => {
+                    if (e.lifetime) {
+                        e.lifetime.time -= dt;
+                    }
+                });
+                this.entities = this.entities.filter(e => !e.lifetime || e.lifetime.time > 0);
+            }
+
+            // --- RENDER PIPELINE ---
+            draw(ctx) {
+                // Clear
+                ctx.clearRect(0, 0, GAME_CONFIG.WIDTH, GAME_CONFIG.HEIGHT);
+
+                // 1. Background Layer
+                const { sky, ground, grass, detail } = this.state.biome.colors;
+                
+                // Sky
+                ctx.fillStyle = sky;
+                ctx.fillRect(0, 0, GAME_CONFIG.WIDTH, GAME_CONFIG.HEIGHT);
+
+                // Stars/Space detail if needed
+                if (this.state.biome.id === 'SPACE' || this.state.biome.id === 'VOID') {
+                     ctx.fillStyle = '#fff';
+                     for(let i=0; i<50; i++) {
+                         const x = (i * 137 + this.state.camX * 0.1) % GAME_CONFIG.WIDTH;
+                         const y = (i * 43) % (GAME_CONFIG.HEIGHT/2);
+                         ctx.fillRect(x, y, 1, 1);
+                     }
+                }
+
+                // Parallax Clouds/Background Objects
+                ctx.fillStyle = `rgba(255,255,255,${this.state.biome.atmosphere})`;
+                const cloudOffset = (this.state.camX * 0.2) % 800;
+                ctx.fillRect(100 - cloudOffset, 50, 60, 20);
+                ctx.fillRect(400 - cloudOffset, 80, 80, 25);
+                ctx.fillRect(900 - cloudOffset, 50, 60, 20); 
+
+                // 2. Camera Transform & Shake
+                ctx.save();
+                const shakeX = (Math.random() - 0.5) * this.state.shake;
+                const shakeY = (Math.random() - 0.5) * this.state.shake;
+                ctx.translate(-this.state.camX + shakeX, shakeY);
+
+                // 3. Ground Layer
+                ctx.fillStyle = ground;
+                ctx.fillRect(this.state.camX - 100, GAME_CONFIG.GROUND_Y, GAME_CONFIG.WIDTH + 300, GAME_CONFIG.HEIGHT - GAME_CONFIG.GROUND_Y);
+                
+                // Ground Detail
+                ctx.fillStyle = detail;
+                for (let i=0; i<20; i++) {
+                     const gx = Math.floor((this.state.camX + i * 100) / 100) * 100;
+                     ctx.fillRect(gx + 20, GAME_CONFIG.GROUND_Y + 10, 20, 20);
+                }
+
+                ctx.fillStyle = grass;
+                ctx.fillRect(this.state.camX - 100, GAME_CONFIG.GROUND_Y, GAME_CONFIG.WIDTH + 300, 10);
+
+                // 4. Entities Layer
+                this.entities.forEach(e => {
+                    // Culling
+                    if (e.pos.x + e.size.w < this.state.camX || e.pos.x > this.state.camX + GAME_CONFIG.WIDTH) return;
+
+                    if (e.sprite) {
+                        // Flicker effect for iframes
+                        if (e.stats && e.stats.iFrames > 0 && Math.floor(this.state.time * 20) % 2 === 0) return;
+
+                        ctx.fillStyle = e.sprite.color;
+                        
+                        // Rotational transform for particles
+                        if (e.tags.has('PARTICLE')) {
+                            ctx.fillRect(e.pos.x, e.pos.y, e.size.w, e.size.h);
+                        } else if (e.tags.has('UI_FX')) {
+                            ctx.font = '10px "Press Start 2P"';
+                            ctx.fillText(e.text, e.pos.x, e.pos.y);
+                        } else {
+                            // Standard entity draw
+                            ctx.fillRect(e.pos.x, e.pos.y, e.size.w, e.size.h);
+                            
+                            // Detail rendering based on type
+                            if (e.tags.has('HERO')) {
+                                // Eyes
+                                ctx.fillStyle = '#000';
+                                ctx.fillRect(e.pos.x + 14, e.pos.y + 10, 4, 4);
+                                // Scarf
+                                ctx.fillStyle = '#ff003c';
+                                const trail = Math.sin(this.state.time * 10) * 5;
+                                ctx.fillRect(e.pos.x - 10, e.pos.y + 10 + trail, 10, 4);
+                                
+                                // Ice Block overlay
+                                if (e.stats.frozen > 0) {
+                                    ctx.fillStyle = 'rgba(160, 192, 255, 0.6)';
+                                    ctx.fillRect(e.pos.x - 5, e.pos.y - 5, e.size.w + 10, e.size.h + 10);
+                                }
+                            } else if (e.trap) {
+                                // Trap details
+                                ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+                                ctx.lineWidth = 2;
+                                ctx.strokeRect(e.pos.x, e.pos.y, e.size.w, e.size.h);
+                                
+                                // Icon or Symbol
+                                ctx.fillStyle = 'rgba(0,0,0,0.5)';
+                                ctx.font = '16px monospace';
+                                ctx.textAlign = 'center';
+                                ctx.fillText(TRAP_TYPES[e.trap.type].icon, e.pos.x + e.size.w/2, e.pos.y + e.size.h/2 + 5);
+                            }
+                        }
+                    }
+                });
+
+                // 5. Weather Layer (Foreground)
+                this.state.weatherParticles.forEach(p => {
+                    ctx.fillStyle = p.color;
+                    const w = p.type === 'SNOW' ? 3 : 1;
+                    const h = p.type === 'SNOW' ? 3 : 10;
+                    ctx.fillRect(p.x, p.y, w, h); 
+                });
+
+                ctx.restore();
+
+                // 6. Post-Processing / Aberration (Canvas manipulation)
+                if (this.state.aberration > 1) {
+                    const imageData = ctx.getImageData(0, 0, GAME_CONFIG.WIDTH, GAME_CONFIG.HEIGHT);
+                    // This is computationally expensive, so we just simulate it with a simple shift draw if possible
+                    // Or we just draw global composite operation 'screen' with an offset
+                    ctx.save();
+                    ctx.globalCompositeOperation = 'screen';
+                    ctx.globalAlpha = 0.5;
+                    ctx.fillStyle = '#f0f';
+                    ctx.fillRect(0,0,GAME_CONFIG.WIDTH, GAME_CONFIG.HEIGHT); // Simple tint for now to save CPU
+                    ctx.restore();
+                }
+            }
+        }
+
+        // ==========================================
+        // MODULE 6: REACT UI LAYER
+        // ==========================================
+
+        const Scanlines = () => (
+            <>
+                <div className="crt-scanlines"></div>
+                <div className="crt-glow"></div>
+                <div className="crt-flicker"></div>
+                <div className="fixed top-0 left-0 w-full h-1 bg-sys-glitch/20 animate-scan z-50 pointer-events-none"></div>
+            </>
+        );
+
+        const SystemNotifications = ({ active }) => {
+            return (
+                <div className="absolute top-20 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 z-50 pointer-events-none">
+                    <AnimatePresence>
+                        {active.map(note => (
+                            <motion.div
+                                key={note.id}
+                                initial={{ opacity: 0, y: -20, scale: 0.8 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.5 }}
+                                className="flex items-center gap-4 bg-sys-panel border border-sys-success p-3 shadow-[0_0_20px_rgba(0,255,65,0.2)]"
+                            >
+                                <div className="text-2xl">{note.icon}</div>
+                                <div>
+                                    <div className="text-[10px] text-sys-success font-bold tracking-widest uppercase">ACHIEVEMENT UNLOCKED</div>
+                                    <div className="text-white font-display font-bold">{note.title}</div>
+                                    <div className="text-[9px] text-gray-400 font-mono">{note.desc}</div>
+                                </div>
+                            </motion.div>
+                        ))}
+                    </AnimatePresence>
+                </div>
+            );
+        };
+
+        const BetaModal = ({ onAccept }) => {
+            return (
+                <div className="fixed inset-0 z-[100] bg-black flex items-center justify-center p-4">
+                    <div className="max-w-2xl w-full bg-sys-panel border-2 border-sys-accent p-8 relative overflow-hidden shadow-[0_0_50px_rgba(255,0,60,0.3)]">
+                        <div className="absolute top-0 left-0 w-full h-2 bg-sys-accent"></div>
+                        <div className="absolute top-0 right-0 p-2 text-[10px] text-sys-accent font-mono">SECURE_CHANNEL_ESTABLISHED</div>
+                        
+                        <h1 className="text-4xl md:text-6xl font-display font-black text-white mb-2 glitch-wrapper" data-text="YOU ARE THE ENEMY">
+                            YOU ARE THE ENEMY
+                        </h1>
+                        <h2 className="text-xl font-mono text-sys-accent mb-8 blink">/// SYSTEM LOCKDOWN: OVERLORD_BUILD_V7.1 ///</h2>
+                        
+                        <div className="font-mono text-sm text-gray-400 space-y-4 mb-8 leading-relaxed border-l-2 border-sys-border pl-4">
+                            <p><strong className="text-white">WARNING:</strong> Unauthorized access detected.</p>
+                            <p>You are now the System Administrator. The Hero is a virus. Eradicate them.</p>
+                            <ul className="list-disc pl-5 text-xs text-sys-warn space-y-1">
+                                <li>Deploy traps to drain Hero HP.</li>
+                                <li>Collect MALICE to fund interventions.</li>
+                                <li>Unlock Archive Data to understand the loop.</li>
+                            </ul>
+                        </div>
+
+                        <button 
+                            onClick={onAccept}
+                            className="w-full py-4 bg-sys-accent text-black font-black font-display text-xl tracking-widest hover:bg-white hover:text-sys-accent transition-all uppercase group relative overflow-hidden"
+                        >
+                            <span className="relative z-10">INITIALIZE SEQUENCE</span>
+                            <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform"></div>
+                        </button>
+                    </div>
+                </div>
+            );
+        };
+
+        const TerminalLog = ({ logs }) => {
+            const endRef = useRef(null);
+            useEffect(() => { endRef.current?.scrollIntoView({behavior: "smooth"}); }, [logs]);
+
+            return (
+                <div className="h-48 shrink-0 bg-black border-t border-sys-border p-2 font-mono text-[10px] flex flex-col">
+                    <div className="text-gray-500 mb-1 border-b border-gray-800 pb-1 flex justify-between">
+                        <span>SYSTEM_LOGS // CORE_DUMP</span>
+                        <span className="text-sys-success animate-pulse">● REC</span>
+                    </div>
+                    <div className="flex-1 overflow-y-auto cyber-scroll space-y-1">
+                        {logs.map((log, i) => (
+                            <div key={i} className="text-sys-glitch opacity-80 border-l-2 border-transparent hover:border-sys-accent pl-1 transition-colors">
+                                <span className="text-gray-600">[{log.time}]</span> {log.msg}
+                            </div>
+                        ))}
+                        <div ref={endRef} />
+                    </div>
+                </div>
+            );
+        };
+
+        const TrapButton = ({ type, data, malice, onClick }) => {
+            const canAfford = malice >= data.cost;
+            return (
+                <button 
+                    onClick={() => onClick(type)}
+                    disabled={!canAfford}
+                    className={`
+                        relative h-24 border border-sys-border flex flex-col items-center justify-center gap-1 group transition-all overflow-hidden
+                        ${canAfford ? 'bg-sys-panel hover:border-sys-accent hover:bg-sys-accent/10 cursor-pointer' : 'bg-black opacity-50 cursor-not-allowed'}
+                    `}
+                >
+                    <div className={`text-2xl transition-transform group-hover:scale-110 ${canAfford ? 'text-white' : 'text-gray-600'}`}>
+                        {data.icon}
+                    </div>
+                    <div className="text-[10px] font-bold text-sys-accent uppercase tracking-wider">{data.name}</div>
+                    <div className="text-[9px] font-mono text-sys-glitch">{data.cost} MALICE</div>
+                    
+                    {/* Hover Stats */}
+                    <div className="absolute inset-0 bg-black/90 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity p-2 text-center pointer-events-none">
+                         <span className="text-[8px] text-gray-400">DMG: {data.damage}</span>
+                         <span className="text-[8px] text-gray-400">TYPE: {data.type}</span>
+                    </div>
+                </button>
+            );
+        };
+
+        const TabButton = ({ active, label, onClick }) => (
+            <button 
+                onClick={onClick}
+                className={`flex-1 py-3 text-[10px] font-bold tracking-widest border-b-2 transition-colors ${active ? 'border-sys-accent text-white bg-sys-panel' : 'border-transparent text-gray-600 hover:text-gray-400'}`}
+            >
+                {label}
+            </button>
+        );
+
+        const DatabaseView = ({ unlockedLore }) => {
+            return (
+                <div className="flex-1 overflow-y-auto cyber-scroll p-4 bg-sys-panel">
+                    <h3 className="text-sys-accent font-display font-bold mb-4 sticky top-0 bg-sys-panel pb-2 border-b border-gray-800">ARCHIVE_DATABASE</h3>
+                    {LORE_DB.map((entry) => {
+                        const isUnlocked = unlockedLore.includes(entry.id);
+                        return (
+                            <div key={entry.id} className={`mb-4 border p-3 ${isUnlocked ? 'border-sys-border bg-black' : 'border-gray-800 bg-gray-900 opacity-50'}`}>
+                                <div className="flex justify-between items-center mb-1">
+                                    <span className={`font-mono text-xs ${isUnlocked ? 'text-sys-glitch' : 'text-gray-600'}`}>
+                                        {isUnlocked ? entry.title : '/// ENCRYPTED ///'}
+                                    </span>
+                                    <span className="text-[9px] text-gray-500">{entry.id}</span>
+                                </div>
+                                <p className="text-[10px] text-gray-400 font-mono leading-relaxed">
+                                    {isUnlocked ? entry.desc : `REQ. SCORE: ${entry.unlockScore}m`}
+                                </p>
+                            </div>
+                        );
+                    })}
+                </div>
+            );
+        };
+
+        const SettingsView = ({ onToggleAudio, isMuted }) => (
+             <div className="flex-1 p-4 bg-sys-panel">
+                <h3 className="text-white font-display font-bold mb-4">SYSTEM_CONFIG</h3>
+                <div className="space-y-4">
+                    <div className="flex justify-between items-center border border-sys-border p-3">
+                        <span className="text-xs text-gray-400 font-mono">AUDIO_OUTPUT</span>
+                        <button onClick={onToggleAudio} className={`px-3 py-1 text-[10px] ${!isMuted ? 'bg-sys-success text-black' : 'bg-red-900 text-white'}`}>
+                            {isMuted ? 'MUTED' : 'ACTIVE'}
+                        </button>
+                    </div>
+                    <div className="flex justify-between items-center border border-sys-border p-3">
+                         <span className="text-xs text-gray-400 font-mono">GRAPHICS_QUALITY</span>
+                         <span className="text-xs text-sys-glitch">ULTRA</span>
+                    </div>
+                    <div className="flex justify-between items-center border border-sys-border p-3">
+                         <span className="text-xs text-gray-400 font-mono">EMERGENCY_EXIT</span>
+                         <a href="../arcade-zone.html" className="px-3 py-1 text-[10px] bg-sys-accent text-white hover:bg-red-500 text-center uppercase">
+                            ABORT_SIM
+                         </a>
+                    </div>
+                     <div className="p-3 bg-black border border-sys-border text-[9px] font-mono text-gray-500">
+                        BUILD: v7.1.0<br/>
+                        MEMORY_HEAP: 45MB<br/>
+                        RENDERER: CANVAS_2D<br/>
+                        UPTIME: {Math.floor(performance.now() / 1000)}s
+                    </div>
+                </div>
+             </div>
+        );
+
+        // ==========================================
+        // MAIN APP COMPONENT
+        // ==========================================
+
+        const App = () => {
+            const [mode, setMode] = useState('BETA'); // BETA, GAME, GAMEOVER, WIN
+            const [activeTab, setActiveTab] = useState('DEPLOY'); // DEPLOY, DB, SETTINGS
+            const [logs, setLogs] = useState([]);
+            const [isMuted, setIsMuted] = useState(false);
+            const [achievements, setAchievements] = useState([]);
+            
+            // Log function accessible to engine
+            const log = useCallback((msg) => {
+                const time = new Date().toLocaleTimeString('en-US', {hour12: false, hour:'2-digit', minute:'2-digit', second:'2-digit'});
+                setLogs(prev => [...prev.slice(-50), {time, msg}]);
+            }, []);
+
+            const addAchievement = useCallback((ach) => {
+                setAchievements(prev => [...prev, ach]);
+                log(`ACHIEVEMENT_UNLOCKED: ${ach.id}`);
+                // Remove notification after 4 seconds
+                setTimeout(() => {
+                    setAchievements(prev => prev.filter(p => p.id !== ach.id));
+                }, 4000);
+            }, [log]);
+
+            // Engine Instance
+            const [engine] = useState(() => new GameEngine(
+                (state) => setGameState({...state}),
+                log,
+                addAchievement
+            ));
+            
+            const [gameState, setGameState] = useState({ 
+                hp: 100, malice: 50, score: 0, 
+                biome: BIOMES.PLAINS, unlockedLore: [],
+                trapsDeployed: 0
+            });
+            
+            const canvasRef = useRef(null);
+            
+            // Random Chatter effect
+            useEffect(() => {
+                if (mode !== 'GAME') return;
+                const interval = setInterval(() => {
+                    if (Math.random() < 0.1) {
+                         log(`SYS: ${RNG.pick(SYSTEM_CHATTER)}`);
+                    }
+                }, 2000);
+                return () => clearInterval(interval);
+            }, [mode, log]);
+
+            const startGame = () => {
+                Audio.init();
+                setMode('GAME');
+                engine.reset();
+                engine.state.running = true;
+                log("INIT_SEQUENCE_COMPLETE");
+                log("CONNECTION_ESTABLISHED: NODE_ALPHA");
+                log("WARNING: HERO ENTITY DETECTED");
+            };
+
+            const deployTrap = (type) => {
+                if (engine.spawnTrap(type)) {
+                    log(`CMD: DEPLOY_TRAP [${type}]`);
+                } else {
+                    log("ERR: INSUFFICIENT_MALICE_FUNDS");
+                }
+            };
+
+            // Game Loop
+            useEffect(() => {
+                if (mode !== 'GAME') return;
+                const cvs = canvasRef.current;
+                const ctx = cvs.getContext('2d', { alpha: false }); // Optimize
+                let reqId;
+
+                const loop = () => {
+                    engine.update(GAME_CONFIG.TICK_RATE);
+                    
+                    // Canvas Resizing
+                    const rect = cvs.parentElement.getBoundingClientRect();
+                    if (cvs.width !== GAME_CONFIG.WIDTH) {
+                        cvs.width = GAME_CONFIG.WIDTH;
+                        cvs.height = GAME_CONFIG.HEIGHT;
+                    }
+                    
+                    engine.draw(ctx);
+                    
+                    if (engine.hero && engine.hero.stats.hp <= 0) {
+                        setMode('WIN');
+                        log("MISSION_SUCCESS: SUBJECT_TERMINATED");
+                        Audio.sfx('DIE');
+                        engine.state.stats.kills = (engine.state.stats.kills || 0) + 1;
+                    }
+                    reqId = requestAnimationFrame(loop);
+                };
+                reqId = requestAnimationFrame(loop);
+                return () => cancelAnimationFrame(reqId);
+            }, [mode, engine]);
+
+            const toggleAudio = () => {
+                Audio.isMuted = !Audio.isMuted;
+                setIsMuted(Audio.isMuted);
+                log(`AUDIO_BUS: ${Audio.isMuted ? 'DISABLED' : 'ENABLED'}`);
+            };
+
+            return (
+                <div className="w-full h-full flex flex-col md:flex-row relative bg-sys-base font-sans overflow-hidden">
+                    <Scanlines />
+                    <SystemNotifications active={achievements} />
+
+                    <AnimatePresence>
+                        {mode === 'BETA' && (
+                            <motion.div initial={{opacity: 0}} animate={{opacity: 1}} exit={{opacity: 0}} className="absolute inset-0 z-50">
+                                <BetaModal onAccept={startGame} />
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
+                    {['WIN', 'GAMEOVER'].includes(mode) && (
+                        <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4">
+                            <div className="text-center border-2 border-white p-10 bg-black max-w-lg w-full">
+                                <h1 className={`text-4xl md:text-6xl font-display font-black mb-4 ${mode === 'WIN' ? 'text-sys-success' : 'text-sys-accent'}`}>
+                                    {mode === 'WIN' ? 'TERMINATED' : 'FAILURE'}
+                                </h1>
+                                <div className="font-mono text-sm text-gray-400 mb-8 space-y-2">
+                                    <p>FINAL SCORE: {gameState.score}m</p>
+                                    <p>TRAPS DEPLOYED: {gameState.trapsDeployed}</p>
+                                    <p>MALICE GENERATED: {Math.floor(engine.state.malice)}</p>
+                                </div>
+                                <div className="flex gap-4">
+                                    <button onClick={startGame} className="flex-1 py-3 bg-white text-black font-bold hover:bg-gray-200 uppercase tracking-widest">
+                                        REBOOT SYSTEM
+                                    </button>
+                                    <a href="../arcade-zone.html" className="flex-1 py-3 bg-sys-accent text-white font-bold hover:bg-red-600 uppercase tracking-widest flex items-center justify-center">
+                                        EXIT LOBBY
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* LEFT: VIEWPORT (Flex-1 to take available space) */}
+                    <div className="flex-1 relative flex flex-col border-r border-sys-border min-h-0">
+                        {/* Header Bar */}
+                        <div className="h-10 shrink-0 bg-sys-panel border-b border-sys-border flex items-center justify-between px-4 z-10">
+                            <div className="flex items-center gap-4 text-xs font-mono">
+                                <a href="../arcade-zone.html" className="flex items-center gap-1 text-sys-accent hover:text-white transition-colors group">
+                                    <span className="group-hover:-translate-x-1 transition-transform">◄</span> EXIT
+                                </a>
+                                <span className="text-sys-glitch hidden sm:inline">CAM_FEED_01</span>
+                                <span className="text-gray-500 hidden md:inline">SECTOR: {gameState.biome.name.toUpperCase()}</span>
+                                <span className="text-gray-500 hidden md:inline">ATMOSPHERE: {gameState.biome.weather}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
+                                <span className="text-[9px] font-mono text-red-500">LIVE</span>
+                            </div>
+                        </div>
+
+                        {/* Canvas Container */}
+                        <div className="flex-1 relative bg-black flex items-center justify-center overflow-hidden grid-bg">
+                            <canvas ref={canvasRef} className="w-full h-full object-contain" />
+                            
+                            {/* HUD Overlay */}
+                            <div className="absolute top-4 left-4 p-3 bg-black/80 border border-sys-border backdrop-blur-md min-w-[200px]">
+                                <div className="text-[9px] text-gray-400 font-mono mb-1 flex justify-between">
+                                    <span>TARGET_VITALS</span>
+                                    <span>{Math.ceil(gameState.hp)}%</span>
+                                </div>
+                                <div className="w-full h-3 bg-gray-900 border border-gray-700 relative">
+                                    <motion.div 
+                                        className="h-full bg-gradient-to-r from-sys-warn to-sys-success"
+                                        initial={{width: '100%'}}
+                                        animate={{width: `${Math.max(0, gameState.hp)}%`}}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="absolute top-4 right-4 p-2 bg-black/50 text-[10px] font-mono text-gray-500">
+                                FPS: 60<br/>
+                                ENTITIES: {engine.entities ? engine.entities.length : 0}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* RIGHT: CONTROL DECK */}
+                    <div className="w-full md:w-80 bg-sys-panel flex flex-col z-20 shadow-2xl h-1/2 md:h-full shrink-0 border-t md:border-t-0 md:border-l border-sys-border">
+                        <div className="p-4 border-b border-sys-border bg-black/50 shrink-0">
+                            <h2 className="font-display font-bold text-lg text-white tracking-wider flex items-center gap-2">
+                                <span className="text-sys-accent">///</span> OVERLORD_OS
+                            </h2>
+                        </div>
+
+                        {/* Resource */}
+                        <div className="p-4 bg-gradient-to-b from-sys-panel to-black border-b border-sys-border shrink-0">
+                            <div className="flex justify-between items-end mb-2">
+                                <span className="text-xs font-mono text-sys-glitch">MALICE_BUFFER</span>
+                                <span className="text-xl font-bold font-display text-white">{Math.floor(gameState.malice)}</span>
+                            </div>
+                            <div className="w-full h-2 bg-gray-900 rounded-full overflow-hidden">
+                                <motion.div 
+                                    className="h-full bg-sys-accent"
+                                    animate={{width: `${Math.min(100, (gameState.malice / engine.state.maxMalice) * 100)}%`}}
+                                />
+                            </div>
+                            <div className="mt-1 text-[9px] text-gray-500 font-mono text-right">
+                                +{engine.state.maliceGenRate}/sec
+                            </div>
+                        </div>
+
+                        {/* Tabs */}
+                        <div className="flex border-b border-sys-border bg-black shrink-0">
+                            <TabButton active={activeTab === 'DEPLOY'} label="ARSENAL" onClick={() => setActiveTab('DEPLOY')} />
+                            <TabButton active={activeTab === 'DB'} label="DATA" onClick={() => setActiveTab('DB')} />
+                            <TabButton active={activeTab === 'SETTINGS'} label="SYS" onClick={() => setActiveTab('SETTINGS')} />
+                        </div>
+
+                        {/* Content (Flex 1 to scroll) */}
+                        {activeTab === 'DEPLOY' && (
+                            <div className="flex-1 overflow-y-auto cyber-scroll p-4">
+                                <div className="grid grid-cols-2 gap-3">
+                                    {Object.keys(TRAP_TYPES).map(key => (
+                                        <TrapButton 
+                                            key={key} 
+                                            type={key} 
+                                            data={TRAP_TYPES[key]} 
+                                            malice={gameState.malice}
+                                            onClick={deployTrap}
+                                        />
+                                    ))}
+                                </div>
+                                <div className="mt-4 border border-sys-border p-2 bg-black/30">
+                                    <div className="text-[9px] text-gray-500 font-mono mb-1">DISTANCE_TRAVELED</div>
+                                    <div className="text-xl text-white font-display font-bold">{gameState.score}m</div>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'DB' && (
+                            <DatabaseView unlockedLore={gameState.unlockedLore} />
+                        )}
+
+                        {activeTab === 'SETTINGS' && (
+                            <SettingsView onToggleAudio={toggleAudio} isMuted={isMuted} />
+                        )}
+
+                        {/* Terminal (Fixed Height) */}
+                        <TerminalLog logs={logs} />
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
